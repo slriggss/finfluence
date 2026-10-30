@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Finfluencer Tracker – Browse</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#8a2f5b">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main>
+  <h1>Browse</h1>
+  <p class="muted" id="runtime">Loading…</p>
+  <div class="controls">
+    <label>Search by name<input id="q" type="search" placeholder="e.g. rich"></label>
+    <label>Kind<select id="kind"><option value="">All</option></select></label>
+    <label>Size tier<select id="tier"><option value="">All</option></select></label>
+    <label>Sort by<select id="sort">
+      <option value="subscribers">Subscribers</option><option value="views">Views</option>
+      <option value="videos">Videos</option><option value="views_per_video">Views per video</option>
+      <option value="item">Name</option></select></label>
+    <label>Order<select id="dir"><option value="-1">High to low</option><option value="1">Low to high</option></select></label>
+    <label>Shortlist<select id="only"><option value="">All channels</option><option value="1">Starred only</option></select></label>
+  </div>
+  <p class="muted" id="count"></p>
+  <div class="table-wrap" id="table"></div>
+</main>
+<script src="calc.js"></script>
+<script src="app.js"></script>
+<script>
+renderNav("browse.html");
+const KEY = "finfluencer-shortlist";
+let stars = new Set();
+try { stars = new Set(JSON.parse(localStorage.getItem(KEY) || "[]")); } catch (e) {}
+const saveStars = () => { try { localStorage.setItem(KEY, JSON.stringify([...stars])); } catch (e) {} };
+const NUMERIC = [["subscribers", "Subscribers"], ["views", "Views"], ["videos", "Videos"], ["views_per_video", "Views / video"]];
+let data = [];
+
+function fill(sel, values) {
+  $(sel).insertAdjacentHTML("beforeend", [...new Set(values)].filter(Boolean).sort().map(v => `<option>${esc(v)}</option>`).join(""));
+}
+function render() {
+  const q = $("#q").value.trim().toLowerCase(), kind = $("#kind").value, tier = $("#tier").value;
+  const col = $("#sort").value, dir = +$("#dir").value, only = $("#only").value;
+  const list = data.filter(r => (!q || r.item.toLowerCase().includes(q)) && (!kind || r.kind === kind) &&
+    (!tier || r.tier === tier) && (!only || stars.has(r.item_id)));
+  list.sort((a, b) => {
+    if (col === "item") return dir * a.item.localeCompare(b.item);
+    const x = a[col], y = b[col];  // empty values always sort last
+    return x == null ? 1 : y == null ? -1 : dir * (x - y);
+  });
+  $("#count").textContent = `${list.length} of ${data.length} channels`;
+  $("#table").innerHTML = list.length ? `<table><tr><th></th><th>Channel</th><th>Kind</th><th>Tier</th>` +
+    NUMERIC.map(([c, l]) => `<th class="num sortable" data-col="${c}">${l}${c === col ? (dir < 0 ? " ▼" : " ▲") : ""}</th>`).join("") + `</tr>` +
+    list.map(r => `<tr><td><button class="star ${stars.has(r.item_id) ? "on" : ""}" data-id="${esc(r.item_id)}" aria-label="Star ${esc(r.item)}">${stars.has(r.item_id) ? "★" : "☆"}</button></td>
+      <td><a href="https://www.youtube.com/channel/${esc(r.item_id)}" target="_blank" rel="noopener">${esc(r.item)}</a></td>
+      <td>${esc(r.kind)}</td><td>${esc(r.tier)}</td>` +
+      NUMERIC.map(([c]) => `<td class="num">${fmt(r[c])}</td>`).join("") + `</tr>`).join("") + `</table>`
+    : `<p class="empty">No channels match.</p>`;
+}
+loadData().then(({ rows, status, latest }) => {
+  $("#runtime").textContent = `Latest values · data for ${latest} · last run ${new Date(status.run_time).toUTCString()}`;
+  data = Calc.onDate(rows, latest);
+  fill("#kind", data.map(r => r.kind)); fill("#tier", data.map(r => r.tier));
+  for (const id of ["q", "kind", "tier", "sort", "dir", "only"]) $("#" + id).addEventListener("input", render);
+  $("#table").addEventListener("click", e => {
+    const star = e.target.closest(".star"), th = e.target.closest("th.sortable");
+    if (star) { const id = star.dataset.id; stars.has(id) ? stars.delete(id) : stars.add(id); saveStars(); render(); }
+    if (th) {
+      if ($("#sort").value === th.dataset.col) $("#dir").value = String(-$("#dir").value);
+      else { $("#sort").value = th.dataset.col; $("#dir").value = "-1"; }
+      render();
+    }
+  });
+  render();
+}).catch(showError);
+</script>
+</body>
+</html>

@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Finfluencer Tracker – Trends</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#8a2f5b">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main>
+  <h1>Trends</h1>
+  <p class="muted" id="runtime">Loading…</p>
+
+  <section class="finding">
+    <h2>Each value over the days</h2>
+    <div>
+      <span class="switch" id="metric"></span>
+      <span class="switch" id="mode"></span>
+    </div>
+    <div class="picker" id="picker"></div>
+    <p class="picker"><button data-pick="top5">Top 5</button> <button data-pick="all">All</button> <button data-pick="none">None</button></p>
+    <div class="chart-card" id="line"></div>
+    <p class="how" id="line-how"></p>
+  </section>
+
+  <div id="findings"></div>
+</main>
+<script src="calc.js"></script>
+<script src="app.js"></script>
+<script src="charts.js"></script>
+<script>
+renderNav("trends.html");
+const METRICS = [["subscribers", "Subscribers"], ["views", "Views"], ["videos", "Videos"], ["views_per_video", "Views per video"]];
+const state = { metric: "subscribers", mode: "actual", picked: new Set() };
+let ROWS = [], DATES = [], LATEST = [], COLOR = new Map();
+
+function switchOf(el, options, key) {
+  $(el).innerHTML = options.map(([v, l]) => `<button data-v="${v}" class="${state[key] === v ? "on" : ""}">${l}</button>`).join("");
+  $(el).onclick = e => { const b = e.target.closest("button"); if (b) { state[key] = b.dataset.v; drawLine(); switchOf(el, options, key); } };
+}
+function drawLine() {
+  const series = [];
+  for (const s of Calc.seriesByItem(ROWS, state.metric).values()) {
+    if (!state.picked.has(s.item_id)) continue;
+    const byDate = new Map(s.points.map(p => [p.date, p.value]));
+    const base = s.points.length ? s.points[0].value : null;
+    series.push({ name: s.item, color: COLOR.get(s.item_id),
+      values: DATES.map(d => { const v = byDate.get(d); return v == null ? null : state.mode === "indexed" && base ? (v / base) * 100 : v; }) });
+  }
+  lineChart($("#line"), DATES, series);
+  const label = METRICS.find(m => m[0] === state.metric)[1];
+  $("#line-how").textContent = state.mode === "indexed"
+    ? `${label}, each channel divided by its own first value in the history and multiplied by 100, so every line starts at 100.`
+    : `${label} as written in data/history.csv, one point per day for each picked channel.`;
+}
+
+// One finding: the heading states the result, the paragraph gives the numbers, "how" says how they are computed.
+function finding(heading, numbers, how, labels, values, unit) {
+  const wrap = document.createElement("section");
+  wrap.className = "finding";
+  wrap.innerHTML = `<h2>${esc(heading)}</h2><p>${numbers}</p><p class="how">How it is computed: ${how}</p><div class="chart-card"></div>`;
+  $("#findings").appendChild(wrap);
+  if (labels.length) barChart(wrap.querySelector(".chart-card"), labels, values, unit);
+  else wrap.querySelector(".chart-card").remove();
+}
+const needTwo = "This needs at least two days of data and appears once the pipeline has run again.";
+
+function buildFindings() {
+  // 1. subscribers growth since the first run
+  const g = Calc.sinceFirst(ROWS, "subscribers").sort((a, b) => (b.pct ?? -Infinity) - (a.pct ?? -Infinity));
+  if (g.length) {
+    const top = g[0], bottom = g[g.length - 1];
+    finding(`${top.item} grew its subscriber count the most, ${fmtPct(top.pct)}`,
+      `From ${top.from} to ${top.to}, ${esc(top.item)} went from ${fmt(top.first)} to ${fmt(top.last)} subscribers (${delta(top.change)}). The slowest was ${esc(bottom.item)} at ${fmtPct(bottom.pct)}. YouTube rounds public subscriber counts to three significant figures, so large channels change in visible steps.`,
+      "for each channel, (latest subscribers − first subscribers) ÷ first subscribers, using the first and last dates it has a subscriber count in the history.",
+      g.map(r => r.item), g.map(r => r.pct ?? 0), "%");
+  } else finding("Subscriber growth since the first run is waiting for more data", needTwo, "percent change between each channel's first and latest subscriber count.", [], [], "");
+
+  // 2. biggest one-day jump in views
+  const j = Calc.biggestGains(ROWS, "views").sort((a, b) => b.gain - a.gain);
+  if (j.length) {
+    finding(`The biggest jump in views was ${j[0].item}, +${fmt(j[0].gain)} on ${j[0].date}`,
+      `Between ${j[0].from} and ${j[0].date}, ${esc(j[0].item)} added ${fmt(j[0].gain)} views. The chart shows each channel's own largest gain between two consecutive days in the history; the median of those is ${fmt(Calc.median(j.map(r => r.gain)))}.`,
+      "for each channel, the largest increase in total views between two consecutive dates it appears in the history.",
+      j.map(r => r.item), j.map(r => r.gain), " views");
+  } else finding("The biggest one-day jump in views is waiting for more data", needTwo, "largest day-to-day increase in total views for each channel.", [], [], "");
+
+  // 3. spread of subscribers
+  const sp = Calc.spread(ROWS, "subscribers");
+  if (sp) {
+    const sorted = [...LATEST].filter(r => r.subscribers != null).sort((a, b) => b.subscribers - a.subscribers);
+    finding(`The largest channel has ${sp.topToMedian ? sp.topToMedian.toFixed(0) : "–"} times the subscribers of the median channel`,
+      `On ${sp.date}, ${esc(sp.top.item)} leads with ${fmt(sp.top.subscribers)} subscribers. The median of ${sp.n} channels is ${fmt(sp.median)}, and the smallest is ${esc(sp.bottom.item)} with ${fmt(sp.bottom.subscribers)}, so the top is ${sp.topToBottom ? sp.topToBottom.toFixed(0) : "–"} times the bottom.`,
+      "the subscribers of every channel on the latest date; the median is the middle value (the average of the two middle values when the count is even); the ratios divide the largest by the median and by the smallest.",
+      sorted.map(r => r.item), sorted.map(r => r.subscribers), " subscribers");
+  }
+
+  // 4. posting activity
+  const v = Calc.sinceFirst(ROWS, "videos").sort((a, b) => b.change - a.change);
+  if (v.length) {
+    const total = v.reduce((s, r) => s + r.change, 0);
+    finding(`${v[0].item} posted the most new videos, ${v[0].change} since ${v[0].from}`,
+      `Across ${v.length} channels, ${total} net new videos were counted between each channel's first and latest date. ${esc(v[0].item)} added ${v[0].change}; ${v.filter(r => r.change === 0).length} channels added none. A negative number means videos were deleted or made private.`,
+      "for each channel, latest video count − first video count in the history.",
+      v.map(r => r.item), v.map(r => r.change), " videos");
+  } else finding("Posting activity is waiting for more data", needTwo, "change in each channel's video count between its first and latest date.", [], [], "");
+
+  // 5. views per video
+  const e = LATEST.filter(r => r.views_per_video != null).sort((a, b) => b.views_per_video - a.views_per_video);
+  if (e.length) {
+    finding(`${e[0].item} earns the most views per video, ${fmt(e[0].views_per_video)}`,
+      `On ${e[0].date}, ${esc(e[0].item)} averaged ${fmt(e[0].views_per_video)} lifetime views per video, against a median of ${fmt(Calc.median(e.map(r => r.views_per_video)))} across ${e.length} channels. This is a lifetime average, so a channel with a few viral videos can rank high.`,
+      "total views ÷ total videos for each channel on the latest date, as stored in the views_per_video column.",
+      e.map(r => r.item), e.map(r => r.views_per_video), " views per video");
+  }
+}
+
+loadData().then(({ rows, status, latest }) => {
+  ROWS = rows; DATES = Calc.dates(rows); LATEST = Calc.onDate(rows, latest);
+  $("#runtime").textContent = `Computed in your browser from data/history.csv · ${rows.length.toLocaleString()} rows · ${DATES.length} day${DATES.length === 1 ? "" : "s"} · last run ${new Date(status.run_time).toUTCString()}`;
+  const byName = [...LATEST].sort((a, b) => (b.subscribers ?? -1) - (a.subscribers ?? -1));
+  byName.forEach((r, i) => COLOR.set(r.item_id, PALETTE[i % PALETTE.length]));
+  const pick = how => {
+    state.picked = new Set(how === "all" ? byName.map(r => r.item_id) : how === "none" ? [] : byName.slice(0, 5).map(r => r.item_id));
+    $("#picker").querySelectorAll("input").forEach(i => (i.checked = state.picked.has(i.value)));
+    drawLine();
+  };
+  $("#picker").innerHTML = byName.map(r => `<label><input type="checkbox" value="${esc(r.item_id)}"><i style="background:${COLOR.get(r.item_id)}"></i>${esc(r.item)}</label>`).join("");
+  $("#picker").onchange = e => { e.target.checked ? state.picked.add(e.target.value) : state.picked.delete(e.target.value); drawLine(); };
+  document.querySelector("p.picker").onclick = e => { const b = e.target.closest("button"); if (b) pick(b.dataset.pick); };
+  switchOf("#metric", METRICS, "metric");
+  switchOf("#mode", [["actual", "Actual values"], ["indexed", "Indexed to first day = 100"]], "mode");
+  pick("top5");
+  buildFindings();
+}).catch(showError);
+</script>
+</body>
+</html>

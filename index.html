@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Finfluencer Tracker – Today</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#8a2f5b">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main>
+  <h1>Today</h1>
+  <p class="muted" id="runtime">Loading…</p>
+  <div class="cards" id="counts"></div>
+  <h2>Sources</h2>
+  <div class="table-wrap" id="sources"></div>
+  <h2 id="moves-h">Biggest moves</h2>
+  <p class="muted" id="moves-note"></p>
+  <div class="table-wrap" id="moves"></div>
+  <h2>Latest values</h2>
+  <p class="muted">Change is against each channel's previous run.</p>
+  <div class="table-wrap" id="latest"></div>
+</main>
+<script src="calc.js"></script>
+<script src="app.js"></script>
+<script>
+renderNav("index.html");
+const chg = (v, text) => (v == null ? "" : `<span class="chg ${v > 0 ? "up" : v < 0 ? "down" : "muted"}">${text}</span>`);
+loadData().then(({ rows, status, latest }) => {
+  $("#runtime").textContent = `Last run: ${new Date(status.run_time).toUTCString()} · data for ${latest}`;
+  $("#counts").innerHTML = [["days_with_success", "Days with a successful run"], ["items", "Channels in the latest run"],
+    ["new_today", "Appeared"], ["gone_today", "Disappeared"]]
+    .map(([k, l]) => `<div class="card"><div class="n">${status[k].toLocaleString()}</div><div class="l">${l}</div></div>`).join("");
+  $("#sources").innerHTML = `<table><tr><th>Source</th><th>Status</th><th class="num">Channels</th></tr>` +
+    status.sources.map(s => `<tr><td>${esc(s.name)}</td><td class="${s.ok ? "ok" : "fail"}">${s.ok ? "ok" : "failed"}</td><td class="num">${s.count.toLocaleString()}</td></tr>`).join("") + `</table>`;
+
+  const { prev, moves } = Calc.moves(rows, latest);
+  if (!prev) {
+    $("#moves-note").textContent = "Moves appear once there is a second day of data.";
+  } else {
+    $("#moves-note").textContent = `Top ${moves.length} channels by percent change in total views since ${prev}.`;
+    $("#moves").innerHTML = `<table><tr><th>Channel</th><th class="num">Views before</th><th class="num">Views now</th><th class="num">Change</th></tr>` +
+      moves.map(m => `<tr><td>${esc(m.item)}</td><td class="num">${fmt(m.old)}</td><td class="num">${fmt(m.now)}</td>
+        <td class="num ${m.pct >= 0 ? "up" : "down"}">${fmtPct(m.pct)}</td></tr>`).join("") + `</table>`;
+  }
+
+  const cur = latestWithChange(rows).sort((a, b) => (b.subscribers ?? -1) - (a.subscribers ?? -1));
+  $("#latest").innerHTML = `<table><tr><th>Channel</th><th class="num">Subscribers</th><th class="num">Views</th>
+    <th class="num">Videos</th><th class="num">Views / video</th></tr>` +
+    cur.map(r => `<tr><td>${esc(r.item)}</td>
+      <td class="num">${fmt(r.subscribers)}${chg(r.d_subscribers, delta(r.d_subscribers))}</td>
+      <td class="num">${fmt(r.views)}${chg(r.d_views, delta(r.d_views) + (r.pct_views != null ? ` (${fmtPct(r.pct_views)})` : ""))}</td>
+      <td class="num">${fmt(r.videos)}${chg(r.d_videos, delta(r.d_videos))}</td>
+      <td class="num">${fmt(r.views_per_video)}</td></tr>`).join("") + `</table>`;
+}).catch(showError);
+</script>
+</body>
+</html>
