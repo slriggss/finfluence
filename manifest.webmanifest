@@ -1,6 +1,6 @@
 {
-  "name": "Finfluencer Tracker",
-  "short_name": "Finfluencers",
+  "name": "Finfluence",
+  "short_name": "Finfluence",
   "description": "Daily tracker of women-focused personal-finance YouTube channels.",
   "start_url": "./index.html",
   "scope": "./",

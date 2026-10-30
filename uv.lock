@@ -152,7 +152,7 @@ wheels = [
 ]
 
 [[package]]
-name = "finfluencer-tracker"
+name = "finfluence"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [

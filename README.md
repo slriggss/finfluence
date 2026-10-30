@@ -1,10 +1,10 @@
-# Finfluencer Tracker
+# Finfluence
 
-[![tests](https://github.com/slriggss/finfluencer-tracker/actions/workflows/tests.yml/badge.svg)](https://github.com/slriggss/finfluencer-tracker/actions/workflows/tests.yml)
+[![tests](https://github.com/slriggss/finfluence/actions/workflows/tests.yml/badge.svg)](https://github.com/slriggss/finfluence/actions/workflows/tests.yml)
 
 A tool that, every day on its own, downloads the public YouTube statistics of 16 women-focused personal-finance channels, adds them to a history with one row per channel per day, reports which channels moved the most, and publishes the result as an installable website.
 
-- Site: https://slriggss.github.io/finfluencer-tracker/
+- Site: https://slriggss.github.io/finfluence/
 - Built for the Financial Data Analytics Data Tracker project.
 
 ## What it tracks

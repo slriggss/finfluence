@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Finfluencer Tracker – Browse</title>
+<title>Finfluence – Browse</title>
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#8a2f5b">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
@@ -32,7 +32,7 @@
 <script src="app.js"></script>
 <script>
 renderNav("browse.html");
-const KEY = "finfluencer-shortlist";
+const KEY = "finfluence-shortlist";
 let stars = new Set();
 try { stars = new Set(JSON.parse(localStorage.getItem(KEY) || "[]")); } catch (e) {}
 const saveStars = () => { try { localStorage.setItem(KEY, JSON.stringify([...stars])); } catch (e) {} };

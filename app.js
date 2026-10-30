@@ -8,7 +8,7 @@ const delta = v => (v == null ? "" : v === 0 ? "±0" : `${v > 0 ? "+" : "−"}${
 function renderNav(active) {
   const links = [["index.html", "Today"], ["browse.html", "Browse"], ["trends.html", "Trends"]];
   document.body.insertAdjacentHTML("afterbegin",
-    `<nav><span class="brand">Finfluencer Tracker</span>` +
+    `<nav><span class="brand">Finfluence</span>` +
     links.map(([h, t]) => `<a href="${h}" class="${h === active ? "on" : ""}">${t}</a>`).join("") + `</nav>`);
 }
 
