@@ -1,0 +1,35 @@
+name: daily
+
+on:
+  schedule:
+    - cron: "23 7 * * *"    # 07:23 UTC
+    - cron: "47 19 * * *"   # second run, 19:47 UTC: a backup if the first is skipped (it replaces that day's files)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: daily
+  cancel-in-progress: false
+
+jobs:
+  track:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - name: Fetch sources, build history, write status, update the day's issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+        run: uv run python -m tracker.pipeline
+      - name: Commit data
+        run: |
+          git config user.name "finfluencer-tracker[bot]"
+          git config user.email "actions@users.noreply.github.com"
+          git add data
+          git commit -m "Daily run $(date -u +%F)" || echo "nothing to commit"
+          git pull --rebase
+          git push
