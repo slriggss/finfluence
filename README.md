@@ -2,14 +2,14 @@
 
 [![tests](https://github.com/slriggss/finfluence/actions/workflows/tests.yml/badge.svg)](https://github.com/slriggss/finfluence/actions/workflows/tests.yml)
 
-A tool that, every day on its own, downloads the public YouTube statistics of 16 women-focused personal-finance channels, adds them to a history with one row per channel per day, reports which channels moved the most, and publishes the result as an installable website.
+A tool that, every day on its own, downloads the public YouTube statistics of 17 women-focused and money-mindset personal-finance channels, adds them to a history with one row per channel per day, reports which channels moved the most, and publishes the result as an installable website.
 
 - Site: https://slriggss.github.io/finfluence/
 - Built for the Financial Data Analytics Data Tracker project.
 
 ## What it tracks
 
-Sixteen YouTube channels of creators, educators and companies in women-focused personal finance (see `roster.csv`). The key that lines a channel up from one day to the next is its YouTube **channel ID** (`item_id`). The roster is in `roster.csv`; the `match` column says how sure the match from the creator's Instagram handle to the YouTube channel was (`high`, `medium`, `low`).
+Seventeen YouTube channels of creators, educators and companies in women-focused personal finance, including two chosen for an anti-consumption, frugal-living angle (The Financial Diet and Kate Kaden). See `roster.csv`. The key that lines a channel up from one day to the next is its YouTube **channel ID** (`item_id`). In the roster, the `match` column says how sure the match from the creator's Instagram handle to the YouTube channel was (`high`, `medium`, `low`); `direct` marks a channel added by its YouTube handle, with no Instagram handle (so `instagram` is empty for it).
 
 ## Sources
 
