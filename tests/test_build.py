@@ -139,3 +139,43 @@ def test_all_sources_failing_still_records_the_result(tmp_path, roster):
     saved = json.loads((tmp_path / "2026-10-30" / "results.json").read_text())
     assert saved[0]["name"] == "youtube" and saved[0]["ok"] is False and "down" in saved[0]["error"]
     assert not list((tmp_path / "2026-10-30").glob("*.gz"))
+
+
+# --- two sources: merged rows, and one source failing ---
+
+RSS = '<feeds fetched="2026-10-30T12:00:00Z"><feed channel_id="UCa" title="Alpha">' \
+      '<entry id="v" published="2026-10-29T12:00:00+00:00" views="10"/></feed></feeds>'
+
+
+def write_rss(raw, date, text):
+    with gzip.GzipFile(raw / date / "youtube_rss.xml.gz", "wb", mtime=0) as f:
+        f.write(text.encode())
+
+
+def test_two_sources_merge_into_one_row_per_item(tmp_path, roster):
+    raw = tmp_path / "raw"
+    write_day(raw, "2026-10-30", payload(channel("UCa", "Alpha", 900, 100, 4)))
+    write_rss(raw, "2026-10-30", RSS)
+    rows = build.build_history(build.load_raw(raw), roster)
+    assert len(rows) == 1
+    assert rows[0]["source"] == "youtube+youtube_rss"
+    assert (rows[0]["views"], rows[0]["videos_7d"], rows[0]["days_since_upload"]) == (100, 1, 1)
+
+
+def test_one_source_failing_leaves_the_other_sources_columns_empty(tmp_path, roster):
+    raw = tmp_path / "raw"
+    write_day(raw, "2026-10-30", payload(channel("UCa", "Alpha", 900, 100, 4)))
+    write_day(raw, "2026-10-31", payload())  # API day with no items
+    write_rss(raw, "2026-10-31", RSS.replace("2026-10-30", "2026-10-31").replace("29", "30"))
+    rows = build.build_history(build.load_raw(raw), roster)
+    day2 = [r for r in rows if r["date"] == "2026-10-31"][0]
+    assert day2["source"] == "youtube_rss" and day2["views"] is None and day2["videos_7d"] == 1
+
+
+def test_fetch_all_survives_one_failing_source_and_saves_xml(tmp_path, roster):
+    sources = {"youtube": source(RuntimeError("quota")),
+               "youtube_rss": {"fetch": lambda r: RSS, "normalize": lambda p: [1], "ext": "xml"}}
+    results = fetch_all("2026-10-30", roster, tmp_path, sources)
+    assert [r["ok"] for r in results] == [False, True]
+    with gzip.open(tmp_path / "2026-10-30" / "youtube_rss.xml.gz", "rt") as f:
+        assert f.read() == RSS

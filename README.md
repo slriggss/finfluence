@@ -17,6 +17,10 @@ Seventeen YouTube channels of creators, educators and companies in women-focused
 |---|---|---|
 | `youtube`: YouTube Data API v3, `channels.list` | JSON, saved as `data/raw/<date>/youtube.json.gz` | One call per 50 channels, only for the channel IDs in `roster.csv`, asking for `snippet` and `statistics`. Of the response, only each channel's `id`, `title` and `statistics` are kept (not thumbnails, descriptions or other fields). |
 
+| `youtube_rss`: each channel's public upload feed, `youtube.com/feeds/videos.xml?channel_id=...` | XML, saved as `data/raw/<date>/youtube_rss.xml.gz` | One request per channel in `roster.csv`, no API key. The feeds are combined into one XML document (`<feeds fetched="...">`) that keeps, per upload, only the video id, publish time and view count, plus the channel title (not titles, descriptions or thumbnails). A feed that fails is left out and shows in the source's count; if no feed works the source fails. |
+
+The two sources are independent, so one can fail while the other succeeds. A channel that both report gets one row in the history whose `source` is `youtube+youtube_rss`; if only one reported, `source` names that one and the other source's columns are empty.
+
 The API key is stored as the repository secret `YOUTUBE_API_KEY`, read by the workflow, and never written to any file. Each run also writes `data/raw/<date>/results.json`, the outcome of every source (ok, count, error). A source that fails writes no raw file that day, and the run goes on. If every source fails on a day with no earlier data, `results.json` is still written (with no raw files), so the failure is on record; the build ignores such a day.
 
 ## Files
@@ -51,11 +55,14 @@ Dates are UTC dates, `YYYY-MM-DD`. A value the source does not report is left em
 | `date` | UTC date of the run that produced the row | date |
 | `item_id` | The channel's YouTube channel ID (the key) | text |
 | `item` | The channel's name on YouTube | text |
-| `source` | Where the row came from (`youtube`) | text |
+| `source` | Where the row came from: `youtube`, `youtube_rss`, or `youtube+youtube_rss` | text |
 | `subscribers` | Public subscriber count. YouTube rounds it to three significant figures, and it is empty if the channel hides it. | subscribers |
 | `views` | Total lifetime views of all the channel's videos | views |
 | `videos` | Number of public videos | videos |
 | `views_per_video` | `views ÷ videos`, rounded to one decimal; empty if there are no videos | views per video |
+| `videos_7d` | Uploads in the 7 days before the feed was fetched (from `youtube_rss`). The feed holds only the 15 newest uploads, so 15 means "15 or more". | videos |
+| `days_since_upload` | Whole days from the channel's newest upload to the fetch time (`youtube_rss`) | days |
+| `recent_avg_views` | Mean views of the uploads in the feed (up to 15 newest, `youtube_rss`), rounded to one decimal | views per video |
 | `tier` | Size band from `subscribers`: `under 10K`, `10K-100K`, `100K-1M`, `1M+` | text |
 | `kind` | `creator` (a person-led channel) or `company` (a business or platform), from `roster.csv` | text |
 | `instagram` | The Instagram handle the channel was matched from, from `roster.csv` | text |

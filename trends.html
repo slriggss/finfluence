@@ -34,7 +34,8 @@
 <script src="charts.js"></script>
 <script>
 renderNav("trends.html");
-const METRICS = [["subscribers", "Subscribers"], ["views", "Views"], ["videos", "Videos"], ["views_per_video", "Views per video"]];
+const METRICS = [["subscribers", "Subscribers"], ["views", "Views"], ["videos", "Videos"], ["views_per_video", "Views per video"],
+  ["videos_7d", "Uploads, 7 days"], ["days_since_upload", "Days since upload"], ["recent_avg_views", "Recent avg views"]];
 const state = { metric: "subscribers", mode: "actual", picked: new Set() };
 let ROWS = [], DATES = [], LATEST = [], COLOR = new Map();
 

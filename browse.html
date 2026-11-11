@@ -21,6 +21,8 @@
     <label>Sort by<select id="sort">
       <option value="subscribers">Subscribers</option><option value="views">Views</option>
       <option value="videos">Videos</option><option value="views_per_video">Views per video</option>
+      <option value="videos_7d">Uploads, 7 days</option><option value="days_since_upload">Days since upload</option>
+      <option value="recent_avg_views">Recent avg views</option>
       <option value="item">Name</option></select></label>
     <label>Order<select id="dir"><option value="-1">High to low</option><option value="1">Low to high</option></select></label>
     <label>Shortlist<select id="only"><option value="">All channels</option><option value="1">Starred only</option></select></label>
@@ -36,7 +38,8 @@ const KEY = "finfluence-shortlist";
 let stars = new Set();
 try { stars = new Set(JSON.parse(localStorage.getItem(KEY) || "[]")); } catch (e) {}
 const saveStars = () => { try { localStorage.setItem(KEY, JSON.stringify([...stars])); } catch (e) {} };
-const NUMERIC = [["subscribers", "Subscribers"], ["views", "Views"], ["videos", "Videos"], ["views_per_video", "Views / video"]];
+const NUMERIC = [["subscribers", "Subscribers"], ["views", "Views"], ["videos", "Videos"], ["views_per_video", "Views / video"],
+  ["videos_7d", "Uploads, 7 days"], ["days_since_upload", "Days since upload"], ["recent_avg_views", "Recent avg views"]];
 let data = [];
 
 function fill(sel, values) {

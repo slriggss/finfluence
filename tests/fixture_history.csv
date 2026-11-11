@@ -1,10 +1,10 @@
-date,item_id,item,source,subscribers,views,videos,views_per_video,tier,kind,instagram,youtube_handle
-2026-10-30,UCa,Alpha,youtube,1000,50000,10,5000.0,10K-100K,creator,alpha_ig,@alpha
-2026-10-30,UCb,Beta,youtube,200000,9000000,300,30000.0,100K-1M,company,beta_ig,@beta
-2026-10-30,UCc,Gamma,youtube,,2000,4,500.0,,creator,gamma_ig,@gamma
-2026-10-31,UCa,Alpha,youtube,1100,50500,10,5050.0,10K-100K,creator,alpha_ig,@alpha
-2026-10-31,UCb,Beta,youtube,201000,9300000,302,30794.7,100K-1M,company,beta_ig,@beta
-2026-10-31,UCc,Gamma,youtube,300,2100,4,525.0,under 10K,creator,gamma_ig,@gamma
-2026-11-02,UCa,Alpha,youtube,1050,51500,12,4291.7,10K-100K,creator,alpha_ig,@alpha
-2026-11-02,UCb,Beta,youtube,201500,9301000,302,30798.0,100K-1M,company,beta_ig,@beta
-2026-11-02,UCc,Gamma,youtube,310,2300,4,575.0,under 10K,creator,gamma_ig,@gamma
+date,item_id,item,source,subscribers,views,videos,views_per_video,videos_7d,days_since_upload,recent_avg_views,tier,kind,instagram,youtube_handle
+2026-10-30,UCa,Alpha,youtube,1000,50000,10,5000.0,,,,10K-100K,creator,alpha_ig,@alpha
+2026-10-30,UCb,Beta,youtube,200000,9000000,300,30000.0,,,,100K-1M,company,beta_ig,@beta
+2026-10-30,UCc,Gamma,youtube,,2000,4,500.0,,,,,creator,gamma_ig,@gamma
+2026-10-31,UCa,Alpha,youtube,1100,50500,10,5050.0,,,,10K-100K,creator,alpha_ig,@alpha
+2026-10-31,UCb,Beta,youtube,201000,9300000,302,30794.7,,,,100K-1M,company,beta_ig,@beta
+2026-10-31,UCc,Gamma,youtube,300,2100,4,525.0,,,,under 10K,creator,gamma_ig,@gamma
+2026-11-02,UCa,Alpha,youtube,1050,51500,12,4291.7,,,,10K-100K,creator,alpha_ig,@alpha
+2026-11-02,UCb,Beta,youtube,201500,9301000,302,30798.0,,,,100K-1M,company,beta_ig,@beta
+2026-11-02,UCc,Gamma,youtube,310,2300,4,575.0,,,,under 10K,creator,gamma_ig,@gamma

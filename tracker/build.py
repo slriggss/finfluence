@@ -12,7 +12,7 @@ from .sources import SOURCES
 ROOT = Path(__file__).resolve().parent.parent
 DATA = ROOT / "data"
 COLUMNS = ["date", "item_id", "item", "source", "subscribers", "views", "videos", "views_per_video",
-           "tier", "kind", "instagram", "youtube_handle"]
+           "videos_7d", "days_since_upload", "recent_avg_views", "tier", "kind", "instagram", "youtube_handle"]
 TIERS = [(1_000_000, "1M+"), (100_000, "100K-1M"), (10_000, "10K-100K"), (0, "under 10K")]
 
 
@@ -36,27 +36,40 @@ def load_raw(raw_dir):
             f = day / f"{name}.{src['ext']}.gz"
             if f.exists():
                 with gzip.open(f, "rt", encoding="utf-8") as fh:
-                    found[name] = json.load(fh)
+                    found[name] = json.load(fh) if src["ext"] == "json" else fh.read()
         if found:
             days[day.name] = found
     return days
 
 
 def convert_day(date, payloads, roster):
-    """One row per item for one day, with the common columns."""
+    """One row per item for one day, with the common columns.
+
+    Each source fills the columns it reports; an item that several sources report gets one row whose
+    `source` lists them (joined with "+") and whose columns hold whatever each reported. The item name
+    comes from the first source in SOURCES order that has the item.
+    """
     by_id = {r["channel_id"]: r for r in roster}
+    merged = {}
+    for name in SOURCES:  # fixed order, so the result does not depend on dict order of `payloads`
+        if name not in payloads:
+            continue
+        for r in SOURCES[name]["normalize"](payloads[name]):
+            m = merged.setdefault(r["item_id"], {"item": r["item"], "sources": []})
+            m["sources"].append(name)
+            m.update({k: v for k, v in r.items() if k not in ("item_id", "item")})
     rows = []
-    for name, payload in payloads.items():
-        for r in SOURCES[name]["normalize"](payload):
-            meta = by_id.get(r["item_id"], {})
-            subs, views, videos = r["subscribers"], r["views"], r["videos"]
-            rows.append({
-                "date": date, "item_id": r["item_id"], "item": r["item"], "source": name,
-                "subscribers": subs, "views": views, "videos": videos,
-                "views_per_video": round(views / videos, 1) if views is not None and videos else None,
-                "tier": tier(subs), "kind": meta.get("kind", ""),
-                "instagram": meta.get("instagram", ""), "youtube_handle": meta.get("youtube_handle", ""),
-            })
+    for item_id, m in merged.items():
+        meta = by_id.get(item_id, {})
+        subs, views, videos = m.get("subscribers"), m.get("views"), m.get("videos")
+        row = {"date": date, "item_id": item_id, "item": m["item"], "source": "+".join(m["sources"]),
+               "subscribers": subs, "views": views, "videos": videos,
+               "views_per_video": round(views / videos, 1) if views is not None and videos else None,
+               "videos_7d": m.get("videos_7d"), "days_since_upload": m.get("days_since_upload"),
+               "recent_avg_views": m.get("recent_avg_views"),
+               "tier": tier(subs), "kind": meta.get("kind", ""),
+               "instagram": meta.get("instagram", ""), "youtube_handle": meta.get("youtube_handle", "")}
+        rows.append(row)
     return rows
 
 
@@ -75,7 +88,8 @@ def write_history(rows, path):
 
 def read_history(path):
     """History rows with the numeric columns as numbers (empty -> None)."""
-    num = {"subscribers": int, "views": int, "videos": int, "views_per_video": float}
+    num = {"subscribers": int, "views": int, "videos": int, "views_per_video": float,
+           "videos_7d": int, "days_since_upload": int, "recent_avg_views": float}
     with open(path, newline="", encoding="utf-8") as f:
         rows = list(csv.DictReader(f))
     for r in rows:

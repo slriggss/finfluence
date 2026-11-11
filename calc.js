@@ -1,7 +1,7 @@
 // Pure functions on the history rows. Shared by the pages and by tests/trends_check.js (Node),
 // so the numbers on the Trends page can be checked against data/history.csv.
 (function (root) {
-  const NUM = ["subscribers", "views", "videos", "views_per_video"];
+  const NUM = ["subscribers", "views", "videos", "views_per_video", "videos_7d", "days_since_upload", "recent_avg_views"];
 
   function parseCSV(text) {
     const rows = []; let row = [], cell = "", q = false;

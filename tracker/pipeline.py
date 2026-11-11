@@ -47,8 +47,9 @@ def fetch_all(date, roster, raw_dir=DATA / "raw", sources=SOURCES):
     day_dir.mkdir(parents=True)
     for name, (payload, res) in fetched.items():
         if payload is not None:
+            text = json.dumps(payload, separators=(",", ":")) if sources[name]["ext"] == "json" else payload
             with gzip.GzipFile(day_dir / f"{name}.{sources[name]['ext']}.gz", "wb", mtime=0) as f:
-                f.write(json.dumps(payload, separators=(",", ":")).encode())
+                f.write(text.encode())
     (day_dir / "results.json").write_text(json.dumps(results, indent=1), encoding="utf-8")
     return results
 
