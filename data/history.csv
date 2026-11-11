@@ -135,20 +135,20 @@ date,item_id,item,source,subscribers,views,videos,views_per_video,videos_7d,days
 2026-11-10,UCq2kw2W9H4cDR7Gt4IIgORA,She's on the Money | Victoria Devine,youtube,12700,2252601,2422,930.1,,,,,,10K-100K,creator,shesonthemoneyaus,@shesonthemoney
 2026-11-10,UCuoA4tyfa8Ky2j0vs6GuxDA,Mariah Brunner,youtube,3390,474712,298,1593.0,,,,,,under 10K,creator,itsmariahbrunner,@mariahbrunner
 2026-11-10,UCxe5Nq5v4jFYhwkDQDIFo2w,Adete Dahiya,youtube,760000,332448628,485,685461.1,,,,,,100K-1M,creator,adetedahiya,@adetedahiya
-2026-11-11,UC3e5IaifT2XvVD8Vt8-vX3g,Hot Smart Rich,youtube+youtube_rss,58400,3777754,385,9812.3,2,2,50952.0,,,10K-100K,creator,hotsmartrich,@hotsmartrich
-2026-11-11,UC8LHgvwkmlJ0wZnUFqp63Dw,Baddies & Budgets,youtube+youtube_rss,184000,21790845,673,32378.7,3,1,8656.8,,,100K-1M,creator,baddiesnbudgets,@baddiesandbudgets
-2026-11-11,UCPrI7PiVHJPnYSeIKpKccgw,Money Unfiltered,youtube+youtube_rss,163,41376,39,1060.9,0,1169,403.1,,,under 10K,creator,ellieaustinwilliams,@moneyunfiltered
-2026-11-11,UCSPYNpQ2fHv9HJ-q6MIMaPw,The Financial Diet,youtube+youtube_rss,1350000,213763229,1805,118428.4,6,0,182589.3,,,1M+,company,,@thefinancialdiet
-2026-11-11,UCVtxPWaf9TP6NCo0Zf67O3w,Female Invest,youtube+youtube_rss,1630,893439,31,28820.6,0,700,920.0,,,under 10K,company,femaleinvest,@femaleinvest
-2026-11-11,UCd812MyQYU2a8Tj6LyX0MMw,Dr. Tonika Bruce,youtube+youtube_rss,1630,31077,81,383.7,3,2,95.1,,,under 10K,creator,drtonikabruce,@tonikabruce
-2026-11-11,UCfYq6pFD2f9_MV6Ir3DsSyQ,Her First 100K,youtube+youtube_rss,49200,4746958,691,6869.7,9,0,1190.2,,,10K-100K,creator,herfirst100k,@herfirst100k
-2026-11-11,UCgbXT2QuTj4SYxaWCs3vuAw,Your Rich BFF,youtube+youtube_rss,1300000,409948760,1857,220758.6,13,0,126393.9,,,1M+,creator,your.richbff,@yourrichbff
-2026-11-11,UCid1PChngxqo_AzoVC9JtIw,Hanna Horvath,youtube+youtube_rss,1370,247642,224,1105.5,0,148,562.7,,,under 10K,creator,yourbrain_onmoney,@yourbrainonmoney
-2026-11-11,UCjYpaa0qSxg0IqAGW1LX1yA,Dow Janes,youtube+youtube_rss,80200,2286221,586,3901.4,6,0,521.7,,,10K-100K,company,dow.janes,@DowJanesFinancialEducation
-2026-11-11,UCjmqabfrPXfpLxtRTisOlVw,Ellevest,youtube+youtube_rss,2510,2882,17,169.5,0,12,170.4,,,under 10K,company,ellevest,@ellevest
-2026-11-11,UCjyuMtGxBbGVf7qofE6-Trw,Not A F*cking Cinderella Story,youtube+youtube_rss,10,3017,10,301.7,0,150,301.7,,,under 10K,creator,notafuckingcinderellastory,@notafuckingcinderellastory
-2026-11-11,UClhu-dkUv9icumrazpEOBkg,Kate Kaden,youtube+youtube_rss,69900,10658391,671,15884.3,2,2,25647.5,,,10K-100K,creator,,@katekaden
-2026-11-11,UClvYhie7jUZiFlOJ-X0Hkhg,Smart Women Society,youtube+youtube_rss,16300,5287450,1581,3344.4,2,1,1834.4,,,10K-100K,company,smartwomensociety,@smartwomensociety
-2026-11-11,UCq2kw2W9H4cDR7Gt4IIgORA,She's on the Money | Victoria Devine,youtube+youtube_rss,12700,2252857,2422,930.2,0,49,567.9,,,10K-100K,creator,shesonthemoneyaus,@shesonthemoney
-2026-11-11,UCuoA4tyfa8Ky2j0vs6GuxDA,Mariah Brunner,youtube+youtube_rss,3390,476229,299,1592.7,2,0,1057.5,,,under 10K,creator,itsmariahbrunner,@mariahbrunner
-2026-11-11,UCxe5Nq5v4jFYhwkDQDIFo2w,Adete Dahiya,youtube+youtube_rss,761000,332609001,486,684380.7,4,0,547121.3,,,100K-1M,creator,adetedahiya,@adetedahiya
+2026-11-11,UC3e5IaifT2XvVD8Vt8-vX3g,Hot Smart Rich,youtube+youtube_rss+youtube_videos,58400,3777754,386,9786.9,2,0,50755.8,9641,784,10K-100K,creator,hotsmartrich,@hotsmartrich
+2026-11-11,UC8LHgvwkmlJ0wZnUFqp63Dw,Baddies & Budgets,youtube+youtube_rss+youtube_videos,184000,21790845,673,32378.7,3,1,8661.0,6337,219,100K-1M,creator,baddiesnbudgets,@baddiesandbudgets
+2026-11-11,UCPrI7PiVHJPnYSeIKpKccgw,Money Unfiltered,youtube+youtube_rss+youtube_videos,163,41376,39,1060.9,0,1169,403.1,108,1,under 10K,creator,ellieaustinwilliams,@moneyunfiltered
+2026-11-11,UCSPYNpQ2fHv9HJ-q6MIMaPw,The Financial Diet,youtube+youtube_rss+youtube_videos,1350000,213763229,1805,118428.4,6,0,182766.1,60434,6080,1M+,company,,@thefinancialdiet
+2026-11-11,UCVtxPWaf9TP6NCo0Zf67O3w,Female Invest,youtube+youtube_rss+youtube_videos,1630,893439,31,28820.6,0,700,920.2,192,17,under 10K,company,femaleinvest,@femaleinvest
+2026-11-11,UCd812MyQYU2a8Tj6LyX0MMw,Dr. Tonika Bruce,youtube+youtube_rss+youtube_videos,1630,31077,81,383.7,3,2,95.1,32,6,under 10K,creator,drtonikabruce,@tonikabruce
+2026-11-11,UCfYq6pFD2f9_MV6Ir3DsSyQ,Her First 100K,youtube+youtube_rss+youtube_videos,49200,4746958,691,6869.7,9,0,1192.5,352,25,10K-100K,creator,herfirst100k,@herfirst100k
+2026-11-11,UCgbXT2QuTj4SYxaWCs3vuAw,Your Rich BFF,youtube+youtube_rss+youtube_videos,1300000,410038829,1857,220807.1,13,0,126561.3,52283,4878,1M+,creator,your.richbff,@yourrichbff
+2026-11-11,UCid1PChngxqo_AzoVC9JtIw,Hanna Horvath,youtube+youtube_rss+youtube_videos,1370,247642,224,1105.5,0,148,562.7,367,36,under 10K,creator,yourbrain_onmoney,@yourbrainonmoney
+2026-11-11,UCjYpaa0qSxg0IqAGW1LX1yA,Dow Janes,youtube+youtube_rss+youtube_videos,80200,2286221,586,3901.4,6,1,521.7,190,94,10K-100K,company,dow.janes,@DowJanesFinancialEducation
+2026-11-11,UCjmqabfrPXfpLxtRTisOlVw,Ellevest,youtube+youtube_rss+youtube_videos,2510,2882,17,169.5,0,12,170.4,,,under 10K,company,ellevest,@ellevest
+2026-11-11,UCjyuMtGxBbGVf7qofE6-Trw,Not A F*cking Cinderella Story,youtube+youtube_rss+youtube_videos,10,3017,10,301.7,0,150,301.7,37,1,under 10K,creator,notafuckingcinderellastory,@notafuckingcinderellastory
+2026-11-11,UClhu-dkUv9icumrazpEOBkg,Kate Kaden,youtube+youtube_rss+youtube_videos,69900,10658391,671,15884.3,2,2,25652.4,18982,3756,10K-100K,creator,,@katekaden
+2026-11-11,UClvYhie7jUZiFlOJ-X0Hkhg,Smart Women Society,youtube+youtube_rss+youtube_videos,16300,5287450,1581,3344.4,2,1,1838.7,57,3,10K-100K,company,smartwomensociety,@smartwomensociety
+2026-11-11,UCq2kw2W9H4cDR7Gt4IIgORA,She's on the Money | Victoria Devine,youtube+youtube_rss+youtube_videos,12700,2252857,2422,930.2,0,50,567.9,48,3,10K-100K,creator,shesonthemoneyaus,@shesonthemoney
+2026-11-11,UCuoA4tyfa8Ky2j0vs6GuxDA,Mariah Brunner,youtube+youtube_rss+youtube_videos,3390,476229,299,1592.7,2,0,1059.2,485,107,under 10K,creator,itsmariahbrunner,@mariahbrunner
+2026-11-11,UCxe5Nq5v4jFYhwkDQDIFo2w,Adete Dahiya,youtube+youtube_rss+youtube_videos,761000,332609001,486,684380.7,4,0,547181.9,43207,551,100K-1M,creator,adetedahiya,@adetedahiya
