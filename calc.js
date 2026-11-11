@@ -104,7 +104,34 @@
              topToMedian: med ? top[col] / med : null, topToBottom: bottom[col] ? top[col] / bottom[col] : null };
   }
 
-  const api = { NUM, parseCSV, dates, latestDate, onDate, seriesByItem, pct, moves, sinceFirst, biggestGains, median, spread };
+  // The sum of `col` over all items on each date, in date order (a date's items with an empty value are skipped).
+  function totalsByDate(rows, col) {
+    const m = new Map();
+    for (const r of rows) {
+      if (r[col] == null) continue;
+      const t = m.get(r.date) || { date: r.date, total: 0, n: 0 };
+      t.total += r[col]; t.n += 1; m.set(r.date, t);
+    }
+    return [...m.values()].sort((a, b) => (a.date < b.date ? -1 : 1));
+  }
+
+  // Change in the sum of `col` from the latest earlier date to the latest date, counting only the items that
+  // have a value on both dates, so an item joining or leaving does not look like growth.
+  function totalChange(rows, col) {
+    const latest = latestDate(rows), earlier = dates(rows).filter(d => d < latest);
+    if (!earlier.length) return null;
+    const prev = earlier[earlier.length - 1];
+    const before = new Map(onDate(rows, prev).filter(r => r[col] != null).map(r => [r.item_id, r[col]]));
+    let was = 0, now = 0, n = 0;
+    for (const r of onDate(rows, latest)) {
+      if (r[col] == null || !before.has(r.item_id)) continue;
+      was += before.get(r.item_id); now += r[col]; n += 1;
+    }
+    return { prev, latest, was, now, change: now - was, pct: pct(was, now), n };
+  }
+
+  const api = { NUM, parseCSV, dates, latestDate, onDate, seriesByItem, pct, moves, sinceFirst, biggestGains, median, spread,
+                totalsByDate, totalChange };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   else root.Calc = api;
 })(typeof window !== "undefined" ? window : globalThis);

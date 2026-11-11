@@ -12,5 +12,9 @@ console.log(JSON.stringify({
   videos_since_first: Calc.sinceFirst(rows, "videos"),
   views_gains: Calc.biggestGains(rows, "views"),
   spread_subscribers: strip(Calc.spread(rows, "subscribers")),
+  totals_subscribers: Calc.totalsByDate(rows, "subscribers"),
+  totals_views: Calc.totalsByDate(rows, "views"),
+  total_change_subscribers: Calc.totalChange(rows, "subscribers"),
+  total_change_views: Calc.totalChange(rows, "views"),
   median_views_per_video: Calc.median(Calc.onDate(rows, latest).filter(r => r.views_per_video != null).map(r => r.views_per_video)),
 }));

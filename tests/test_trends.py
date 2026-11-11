@@ -66,6 +66,25 @@ def check(path):
     assert sp["top"]["subscribers"] == max(vals.values()) and sp["bottom"]["subscribers"] == min(vals.values())
     assert sp["topToMedian"] == pytest.approx(max(vals.values()) / med)
 
+    # dashboard tiles: the total of a column on each date, and its change over the items present on both of the last two dates
+    for col in ("subscribers", "views"):
+        by_date = {}
+        for r in rows:
+            if r[col] is not None:
+                by_date.setdefault(r["date"], {})[r["item_id"]] = r[col]
+        assert [(t["date"], t["total"], t["n"]) for t in got[f"totals_{col}"]] == \
+               [(d, sum(v.values()), len(v)) for d, v in sorted(by_date.items())]
+        tc, days = got[f"total_change_{col}"], sorted({r["date"] for r in rows})
+        if len(days) < 2:
+            assert tc is None
+            continue
+        before, now = by_date.get(days[-2], {}), by_date.get(latest, {})
+        common = [i for i in now if i in before]
+        was, cur = sum(before[i] for i in common), sum(now[i] for i in common)
+        assert (tc["prev"], tc["latest"], tc["n"]) == (days[-2], latest, len(common))
+        assert (tc["was"], tc["now"], tc["change"]) == (was, cur, cur - was)
+        assert tc["pct"] == (pytest.approx((cur - was) / was * 100) if was else None)
+
     vpv = [r["views_per_video"] for r in rows if r["date"] == latest and r["views_per_video"] is not None]
     assert got["median_views_per_video"] == pytest.approx(statistics.median(vpv))
 

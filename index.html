@@ -11,50 +11,153 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<main>
-  <h1>Today</h1>
-  <p class="muted" id="runtime">Loading…</p>
-  <div class="cards" id="counts"></div>
-  <h2>Sources</h2>
-  <div class="table-wrap" id="sources"></div>
-  <h2 id="moves-h">Biggest moves</h2>
-  <p class="muted" id="moves-note"></p>
-  <div class="table-wrap" id="moves"></div>
-  <h2>Latest values</h2>
-  <p class="muted">Change is against each channel's previous run.</p>
-  <div class="table-wrap" id="latest"></div>
+<main class="dash">
+  <header class="dash-head">
+    <div>
+      <h1>Today</h1>
+      <p class="muted" id="sub">Loading…</p>
+    </div>
+    <div class="runpill" id="runpill"></div>
+  </header>
+
+  <section class="kpis" id="kpis" aria-label="Headline numbers"></section>
+
+  <div class="grid">
+    <section class="panel span2">
+      <h2>Biggest moves</h2>
+      <p class="panel-note" id="moves-note"></p>
+      <div id="moves"></div>
+    </section>
+    <section class="panel">
+      <h2>Sources</h2>
+      <p class="panel-note" id="sources-note"></p>
+      <div class="src" id="sources"></div>
+      <h3>Schedule</h3>
+      <p class="panel-note">The pipeline runs twice a day, at 07:23 and 19:47 UTC. Each UTC date counts once, however many runs it has.</p>
+      <h3>Move rule</h3>
+      <p class="panel-note">A channel's move is the percent change in its total views since the previous run. The 10 largest, up or down, are listed here and in the day's GitHub Issue.</p>
+    </section>
+  </div>
+
+  <div class="grid">
+    <section class="panel span2">
+      <h2>Audience by channel</h2>
+      <p class="panel-note" id="aud-note"></p>
+      <div id="audience"></div>
+      <div class="legend"><span><i style="background:var(--accent)"></i>Creator</span><span><i style="background:var(--accent2)"></i>Company</span></div>
+    </section>
+    <section class="panel">
+      <h2>Who is tracked</h2>
+      <p class="panel-note" id="mix-note"></p>
+      <div id="mix"></div>
+    </section>
+  </div>
+
+  <section class="panel">
+    <h2>Latest values</h2>
+    <p class="panel-note" id="latest-note"></p>
+    <div class="table-wrap" id="latest"></div>
+  </section>
 </main>
 <script src="calc.js"></script>
 <script src="app.js"></script>
+<script src="charts.js"></script>
 <script>
 renderNav("index.html");
-const chg = (v, text) => (v == null ? "" : `<span class="chg ${v > 0 ? "up" : v < 0 ? "down" : "muted"}">${text}</span>`);
-loadData().then(({ rows, status, latest }) => {
-  $("#runtime").textContent = `Last run: ${new Date(status.run_time).toUTCString()} · data for ${latest}`;
-  $("#counts").innerHTML = [["days_with_success", "Days with a successful run"], ["items", "Channels in the latest run"],
-    ["new_today", "Appeared"], ["gone_today", "Disappeared"]]
-    .map(([k, l]) => `<div class="card"><div class="n">${status[k].toLocaleString()}</div><div class="l">${l}</div></div>`).join("");
-  $("#sources").innerHTML = `<table><tr><th>Source</th><th>Status</th><th class="num">Channels</th></tr>` +
-    status.sources.map(s => `<tr><td>${esc(s.name)}</td><td class="${s.ok ? "ok" : "fail"}">${s.ok ? "ok" : "failed"}</td><td class="num">${s.count.toLocaleString()}</td></tr>`).join("") + `</table>`;
+const TIERS = ["under 10K", "10K-100K", "100K-1M", "1M+"], TIER_VAR = ["--t1", "--t2", "--t3", "--t4"];
 
-  const { prev, moves } = Calc.moves(rows, latest);
+const compact = new Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 2 });
+const tile = (label, value, sub, extra = "", cls = "") =>
+  `<div class="kpi ${cls}"><div class="k-label">${label}</div><div class="k-value">${value}</div><div class="k-sub">${sub}</div>${extra}</div>`;
+
+// A total with its change since the previous run, and a trend line of the total over all days.
+function totalTile(rows, col, label) {
+  const t = Calc.totalChange(rows, col), series = Calc.totalsByDate(rows, col);
+  const now = series.length ? series[series.length - 1].total : null;
+  const sub = t ? `${pill(t.change, delta(t.change))} ${pill(t.pct, fmtPct(t.pct))} <span>since ${t.prev}</span>` : `<span>Change appears after a second day</span>`;
+  const big = now == null ? "–" : `<span title="${now.toLocaleString()}">${compact.format(now)}</span>`;
+  return tile(label, big, sub, sparkline(series.map(s => s.total), 180, 40));
+}
+
+function movesChart(moves) {
+  const max = Math.max(...moves.map(m => Math.abs(m.pct)), 1), mixed = moves.some(m => m.pct < 0);
+  return `<ul class="bars">` + moves.map(m => {
+    const w = (Math.abs(m.pct) / max) * (mixed ? 50 : 100);
+    return `<li><span class="bl" title="${esc(m.item)}">${esc(m.item)}</span>
+      <span class="track ${mixed ? "mid" : ""}"><i class="${m.pct >= 0 ? "pos" : "neg"}" style="width:${w.toFixed(1)}%"></i></span>
+      <span class="bv ${m.pct >= 0 ? "up" : "down"}">${fmtPct(m.pct)}</span>
+      <span class="bs">${fmt(m.old)} → ${fmt(m.now)} views</span></li>`;
+  }).join("") + `</ul>`;
+}
+
+function audienceChart(cur) {
+  const top = cur.filter(r => r.subscribers != null).sort((a, b) => b.subscribers - a.subscribers).slice(0, 10);
+  const max = Math.max(...top.map(r => r.subscribers), 1);
+  return `<ul class="bars">` + top.map(r => `<li><span class="bl" title="${esc(r.item)}">${esc(r.item)}</span>
+    <span class="track"><i class="${esc(r.kind)}" style="width:${((r.subscribers / max) * 100).toFixed(1)}%"></i></span>
+    <span class="bv">${fmt(r.subscribers)}</span></li>`).join("") + `</ul>`;
+}
+
+function stackOf(label, counts, colors) {
+  const total = counts.reduce((a, c) => a + c.n, 0) || 1;
+  return `<h3>${label}</h3><div class="stack" role="img" aria-label="${label}">` +
+    counts.filter(c => c.n).map((c, i) => `<span style="flex:${c.n};background:${c.color}" title="${esc(c.name)}: ${c.n}"></span>`).join("") + `</div>` +
+    `<div class="legend">` + counts.map(c => `<span><i style="background:${c.color}"></i>${esc(c.name)} · ${c.n}</span>`).join("") + `</div>`;
+}
+
+loadData().then(({ rows, status, latest }) => {
+  const dates = Calc.dates(rows), prev = dates.length > 1 ? dates[dates.length - 2] : null;
+  const failed = status.sources.filter(s => !s.ok).length;
+
+  $("#sub").textContent = `Data for ${latest}` + (prev ? ` · each change is against the previous run, ${prev}` : " · the first day of data, so no changes yet");
+  $("#runpill").innerHTML = `<span class="dot ${failed ? "bad" : "ok"}"></span><span><b>${failed ? `${failed} of ${status.sources.length} sources failed` : "All sources ok"}</b>` +
+    ` · last run ${esc(fmtUTC(status.run_time))}</span>`;
+
+  // the counts from status.json, plus the totals the history gives
+  $("#kpis").innerHTML = [
+    totalTile(rows, "subscribers", "Subscribers, all channels"),
+    totalTile(rows, "views", "Views, all channels"),
+    tile("Channels", status.items.toLocaleString(), "in the latest run"),
+    tile("Days of data", status.days_with_success.toLocaleString(), `successful runs since ${esc(status.first_run_date)}`),
+    tile("Roster changes", `<span>${status.new_today.toLocaleString()}<small>appeared</small></span><span>${status.gone_today.toLocaleString()}<small>disappeared</small></span>`,
+      "since the previous run", "", "split"),
+  ].join("");
+
+  const { moves } = Calc.moves(rows, latest);
   if (!prev) {
     $("#moves-note").textContent = "Moves appear once there is a second day of data.";
   } else {
-    $("#moves-note").textContent = `Top ${moves.length} channels by percent change in total views since ${prev}.`;
-    $("#moves").innerHTML = `<table><tr><th>Channel</th><th class="num">Views before</th><th class="num">Views now</th><th class="num">Change</th></tr>` +
-      moves.map(m => `<tr><td>${esc(m.item)}</td><td class="num">${fmt(m.old)}</td><td class="num">${fmt(m.now)}</td>
-        <td class="num ${m.pct >= 0 ? "up" : "down"}">${fmtPct(m.pct)}</td></tr>`).join("") + `</table>`;
+    $("#moves-note").textContent = `The ${moves.length} channels whose total views changed the most, in percent, since ${prev}. Bars use a full scale of at least 1%, so tiny moves stay tiny.`;
+    $("#moves").innerHTML = movesChart(moves);
   }
 
-  const cur = latestWithChange(rows).sort((a, b) => (b.subscribers ?? -1) - (a.subscribers ?? -1));
-  $("#latest").innerHTML = `<table><tr><th>Channel</th><th class="num">Subscribers</th><th class="num">Views</th>
-    <th class="num">Videos</th><th class="num">Views / video</th></tr>` +
-    cur.map(r => `<tr><td>${esc(r.item)}</td>
-      <td class="num">${fmt(r.subscribers)}${chg(r.d_subscribers, delta(r.d_subscribers))}</td>
-      <td class="num">${fmt(r.views)}${chg(r.d_views, delta(r.d_views) + (r.pct_views != null ? ` (${fmtPct(r.pct_views)})` : ""))}</td>
-      <td class="num">${fmt(r.videos)}${chg(r.d_videos, delta(r.d_videos))}</td>
-      <td class="num">${fmt(r.views_per_video)}</td></tr>`).join("") + `</table>`;
+  $("#sources-note").textContent = `Last run ${fmtUTC(status.run_time)}`;
+  $("#sources").innerHTML = status.sources.map(s => `<div class="src-row"><span class="dot ${s.ok ? "ok" : "bad"}"></span>
+    <span class="name">${esc(s.name)}</span><span class="cnt">${s.count.toLocaleString()} channels</span>
+    <span class="pill ${s.ok ? "up" : "down"}">${s.ok ? "ok" : "failed"}</span></div>`).join("");
+
+  const cur = latestWithChange(rows);
+  $("#aud-note").textContent = `Top 10 of ${cur.length} channels by subscribers on ${latest}. Browse has the rest.`;
+  $("#audience").innerHTML = audienceChart(cur);
+
+  const count = (key, order) => order.map((name, i) => ({ name, n: cur.filter(r => r[key] === name).length }));
+  const kinds = count("kind", ["creator", "company"]).map((c, i) => ({ ...c, color: i ? "var(--accent2)" : "var(--accent)" }));
+  const tiers = count("tier", TIERS).map((c, i) => ({ ...c, color: `var(${TIER_VAR[i]})` }));
+  $("#mix-note").textContent = `${cur.length} channels on ${latest}.`;
+  $("#mix").innerHTML = stackOf("Creator or company", kinds) + stackOf("Subscriber size", tiers);
+
+  const viewsBy = Calc.seriesByItem(rows, "views");
+  const ranked = cur.sort((a, b) => (b.subscribers ?? -1) - (a.subscribers ?? -1));
+  $("#latest-note").textContent = `Every channel on ${latest}, largest first. The badge on each number is its change since ${prev || "the previous run"}; the line is total views over all days.`;
+  $("#latest").innerHTML = `<table><tr><th></th><th>Channel</th><th class="num">Subscribers</th><th class="num">Views</th>
+    <th class="num">Videos</th><th class="num">Views / video</th><th>Views, by day</th></tr>` +
+    ranked.map((r, i) => `<tr><td class="rank">${i + 1}</td>
+      <td><a class="chan" href="https://www.youtube.com/channel/${esc(r.item_id)}" target="_blank" rel="noopener">${esc(r.item)}</a><span class="badge">${esc(r.kind)}</span></td>
+      <td class="num">${fmt(r.subscribers)}${r.d_subscribers == null ? "" : pill(r.d_subscribers, delta(r.d_subscribers))}</td>
+      <td class="num">${fmt(r.views)}${r.d_views == null ? "" : pill(r.d_views, delta(r.d_views))}</td>
+      <td class="num">${fmt(r.videos)}${r.d_videos == null ? "" : pill(r.d_videos, delta(r.d_videos))}</td>
+      <td class="num">${fmt(r.views_per_video)}</td>
+      <td class="spark-cell">${sparkline((viewsBy.get(r.item_id) || { points: [] }).points.map(p => p.value))}</td></tr>`).join("") + `</table>`;
 }).catch(showError);
 </script>
 </body>

@@ -5,10 +5,18 @@ const fmt = v => (v == null ? "–" : Math.abs(v) >= 1000 ? Math.round(v).toLoca
 const fmtPct = v => (v == null ? "–" : `${v > 0 ? "+" : ""}${v.toFixed(2)}%`);
 const delta = v => (v == null ? "" : v === 0 ? "±0" : `${v > 0 ? "+" : "−"}${fmt(Math.abs(v))}`);
 
+// "Nov 11, 15:28 UTC" for an ISO timestamp.
+const fmtUTC = iso => new Date(iso).toLocaleString("en-US", { timeZone: "UTC", month: "short", day: "numeric",
+  hour: "2-digit", minute: "2-digit", hour12: false }) + " UTC";
+
+// A small up/down badge for a change; `text` is what it says.
+const pill = (v, text) => `<span class="pill ${v == null ? "flat" : v > 0 ? "up" : v < 0 ? "down" : "flat"}">` +
+  `${v == null ? "" : v > 0 ? "▲ " : v < 0 ? "▼ " : ""}${text}</span>`;
+
 function renderNav(active) {
   const links = [["index.html", "Today"], ["browse.html", "Browse"], ["trends.html", "Trends"]];
   document.body.insertAdjacentHTML("afterbegin",
-    `<nav><span class="brand">Finfluence</span>` +
+    `<nav><span class="brand"><i class="mark"></i>Finfluence</span>` +
     links.map(([h, t]) => `<a href="${h}" class="${h === active ? "on" : ""}">${t}</a>`).join("") + `</nav>`);
 }
 

@@ -35,10 +35,10 @@ The API key is stored as the repository secret `YOUTUBE_API_KEY`, read by the wo
 | `data/raw/<date>/` | The compressed raw responses and `results.json` for each day. |
 | `data/history.csv` | One row per channel per day. |
 | `data/status.json` | Describes the latest run. |
-| `index.html`, `browse.html`, `trends.html` | The three pages: Today, Browse, Trends. |
+| `index.html`, `browse.html`, `trends.html` | The three pages: Today (a dashboard: headline totals, biggest moves, source health, audience and mix charts, and every channel with its change and trend), Browse, Trends. |
 | `app.js` | Navigation bar, data loading and formatting shared by the pages. |
 | `calc.js` | The calculations behind the Today and Trends pages (also run by the tests in Node). |
-| `charts.js` | Small inline-SVG chart functions. |
+| `charts.js` | Small inline-SVG chart functions, including the sparklines on the Today page. |
 | `style.css` | The one set of fonts and colors for all pages. |
 | `manifest.webmanifest`, `sw.js`, `icon*` | Make the site installable and usable offline. |
 | `tests/` | The pytest suite (and a Node script that checks the Trends numbers). |

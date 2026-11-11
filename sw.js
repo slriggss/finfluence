@@ -1,5 +1,5 @@
 // Network first, so online visits always show the latest data; the cache is the offline fallback.
-const CACHE = "finfluence-v1";
+const CACHE = "finfluence-v2";
 const SHELL = ["./", "index.html", "browse.html", "trends.html", "style.css", "app.js", "calc.js", "charts.js",
   "manifest.webmanifest", "icon.svg", "icon-192.png", "icon-512.png", "data/history.csv", "data/status.json"];
 

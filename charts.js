@@ -43,6 +43,18 @@ function lineChart(el, labels, series, zero = false) {
   el.innerHTML = `<svg viewBox="0 0 ${SVG_W} ${SVG_H}" role="img" width="100%">${s}</svg>`;
 }
 
+// A small trend line with no axes, for table cells and dashboard tiles. values run oldest to newest; empty ones are skipped.
+function sparkline(values, w = 90, h = 26) {
+  const v = values.filter(x => x != null);
+  if (v.length < 2) return `<span class="muted">–</span>`;
+  const lo = Math.min(...v), span = Math.max(...v) - lo, n = v.length;
+  const x = i => 3 + (i * (w - 6)) / (n - 1), y = val => (span ? h - 3 - ((val - lo) / span) * (h - 6) : h / 2);
+  const pts = v.map((val, i) => `${x(i).toFixed(1)},${y(val).toFixed(1)}`).join(" ");
+  return `<svg class="spark" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" role="img" aria-label="trend over ${n} days">` +
+    `<polyline fill="none" stroke="var(--accent)" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" points="${pts}"/>` +
+    `<circle cx="${x(n - 1).toFixed(1)}" cy="${y(v[n - 1]).toFixed(1)}" r="2.6" fill="var(--accent)"/></svg>`;
+}
+
 // Vertical bars (negative values hang below zero). `unit` is appended in the tooltip.
 function barChart(el, labels, values, unit = "") {
   if (!values.length) { el.innerHTML = `<p class="empty">Nothing to show.</p>`; return; }
