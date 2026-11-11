@@ -43,7 +43,7 @@ def check(path):
            [(m["item_id"], pytest.approx(m["pct"])) for m in moves]
 
     # growth since the first run, per item
-    for col, key in (("subscribers", "subscribers_since_first"), ("videos", "videos_since_first")):
+    for col, key in (("subscribers", "subscribers_since_first"), ("views", "views_since_first"), ("videos", "videos_since_first")):
         expect = {i: (p[0], p[-1]) for i, p in series(rows, col).items() if len(p) > 1}
         assert {g["item_id"] for g in got[key]} == set(expect)
         for g in got[key]:

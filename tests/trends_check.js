@@ -8,6 +8,7 @@ console.log(JSON.stringify({
   latest,
   moves: Calc.moves(rows, latest),
   subscribers_since_first: Calc.sinceFirst(rows, "subscribers"),
+  views_since_first: Calc.sinceFirst(rows, "views"),
   videos_since_first: Calc.sinceFirst(rows, "videos"),
   views_gains: Calc.biggestGains(rows, "views"),
   spread_subscribers: strip(Calc.spread(rows, "subscribers")),

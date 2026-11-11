@@ -71,15 +71,17 @@ function finding(heading, numbers, how, labels, values, unit) {
 const needTwo = "This needs at least two days of data and appears once the pipeline has run again.";
 
 function buildFindings() {
-  // 1. subscribers growth since the first run
-  const g = Calc.sinceFirst(ROWS, "subscribers").sort((a, b) => (b.pct ?? -Infinity) - (a.pct ?? -Infinity));
+  // 1. views growth since the first run (exact counts; subscribers are rounded by YouTube, so they are context only)
+  const g = Calc.sinceFirst(ROWS, "views").sort((a, b) => (b.pct ?? -Infinity) - (a.pct ?? -Infinity));
   if (g.length) {
     const top = g[0], bottom = g[g.length - 1];
-    finding(`${top.item} grew its subscriber count the most, ${fmtPct(top.pct)}`,
-      `From ${top.from} to ${top.to}, ${esc(top.item)} went from ${fmt(top.first)} to ${fmt(top.last)} subscribers (${delta(top.change)}). The slowest was ${esc(bottom.item)} at ${fmtPct(bottom.pct)}. YouTube rounds public subscriber counts to three significant figures, so large channels change in visible steps.`,
-      "for each channel, (latest subscribers − first subscribers) ÷ first subscribers, using the first and last dates it has a subscriber count in the history.",
+    const sg = Calc.sinceFirst(ROWS, "subscribers").filter(r => r.change !== 0).sort((a, b) => b.change - a.change);
+    const subs = sg.length ? ` In subscribers, ${esc(sg[0].item)} added the most (${delta(sg[0].change)}); YouTube rounds public subscriber counts to three significant figures, so those change in steps.` : "";
+    finding(`${top.item} grew its total views the most, ${fmtPct(top.pct)}`,
+      `From ${top.from} to ${top.to}, ${esc(top.item)} went from ${fmt(top.first)} to ${fmt(top.last)} views (${delta(top.change)}). The slowest was ${esc(bottom.item)} at ${fmtPct(bottom.pct)}. Percent growth favors small channels.${subs}`,
+      "for each channel, (latest total views − first total views) ÷ first total views, using the first and last dates it has a view count in the history.",
       g.map(r => r.item), g.map(r => r.pct ?? 0), "%");
-  } else finding("Subscriber growth since the first run is waiting for more data", needTwo, "percent change between each channel's first and latest subscriber count.", [], [], "");
+  } else finding("View growth since the first run is waiting for more data", needTwo, "percent change between each channel's first and latest total views.", [], [], "");
 
   // 2. biggest one-day jump in views
   const j = Calc.biggestGains(ROWS, "views").sort((a, b) => b.gain - a.gain);
