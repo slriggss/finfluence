@@ -132,3 +132,10 @@ def test_all_sources_failing_keeps_the_days_earlier_files(tmp_path, roster):
 def test_all_sources_failing_on_a_new_day_creates_no_day(tmp_path, roster):
     fetch_all("2026-10-30", roster, tmp_path, {"youtube": source(RuntimeError("down"))})
     assert build.load_raw(tmp_path) == {}
+
+
+def test_all_sources_failing_still_records_the_result(tmp_path, roster):
+    fetch_all("2026-10-30", roster, tmp_path, {"youtube": source(RuntimeError("down"))})
+    saved = json.loads((tmp_path / "2026-10-30" / "results.json").read_text())
+    assert saved[0]["name"] == "youtube" and saved[0]["ok"] is False and "down" in saved[0]["error"]
+    assert not list((tmp_path / "2026-10-30").glob("*.gz"))

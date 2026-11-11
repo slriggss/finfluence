@@ -20,6 +20,7 @@ self.addEventListener("fetch", e => {
     fetch(e.request).then(res => {
       if (res.ok) { const copy = res.clone(); caches.open(CACHE).then(c => c.put(e.request, copy)); }
       return res;
-    }).catch(() => caches.match(e.request).then(hit => hit || caches.match("index.html")))
+    }).catch(() => caches.match(e.request).then(hit => hit ||
+      (new URL(e.request.url).pathname.includes("/data/") ? Response.error() : caches.match("index.html"))))
   );
 });

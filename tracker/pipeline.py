@@ -29,14 +29,19 @@ def fetch_one(name, src, roster):
 def fetch_all(date, roster, raw_dir=DATA / "raw", sources=SOURCES):
     """Pull every source and replace the day's raw files. Returns the per-source results.
 
-    A source that fails writes no raw file. If every source fails, the day's existing files (from an
-    earlier run the same day) are kept as they were rather than wiped.
+    A source that fails writes no raw file, but its result is always recorded in results.json. If every
+    source fails and the day already has raw files (from an earlier run the same day), those files and
+    their results.json are kept as they were rather than wiped.
     """
     fetched = {name: fetch_one(name, src, roster) for name, src in sources.items()}
     results = [res for _, res in fetched.values()]
-    if not any(r["ok"] for r in results):
-        return results
     day_dir = raw_dir / date
+    if not any(r["ok"] for r in results):
+        has_raw = day_dir.exists() and any(p.name != "results.json" for p in day_dir.iterdir())
+        if not has_raw:  # record the failure; load_raw ignores a day folder with no raw file
+            day_dir.mkdir(parents=True, exist_ok=True)
+            (day_dir / "results.json").write_text(json.dumps(results, indent=1), encoding="utf-8")
+        return results
     if day_dir.exists():
         shutil.rmtree(day_dir)
     day_dir.mkdir(parents=True)

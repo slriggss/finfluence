@@ -17,7 +17,7 @@ Seventeen YouTube channels of creators, educators and companies in women-focused
 |---|---|---|
 | `youtube`: YouTube Data API v3, `channels.list` | JSON, saved as `data/raw/<date>/youtube.json.gz` | One call per 50 channels, only for the channel IDs in `roster.csv`, asking for `snippet` and `statistics`. Of the response, only each channel's `id`, `title` and `statistics` are kept (not thumbnails, descriptions or other fields). |
 
-The API key is stored as the repository secret `YOUTUBE_API_KEY`, read by the workflow, and never written to any file. Each run also writes `data/raw/<date>/results.json`, the outcome of every source (ok, count, error). A source that fails writes no raw file that day, and the run goes on.
+The API key is stored as the repository secret `YOUTUBE_API_KEY`, read by the workflow, and never written to any file. Each run also writes `data/raw/<date>/results.json`, the outcome of every source (ok, count, error). A source that fails writes no raw file that day, and the run goes on. If every source fails on a day with no earlier data, `results.json` is still written (with no raw files), so the failure is on record; the build ignores such a day.
 
 ## Files
 

@@ -15,8 +15,8 @@ function renderNav(active) {
 // The service worker answers from its cache when the network is down, so this still works offline.
 async function loadData() {
   const [csv, status] = await Promise.all([
-    fetch("data/history.csv").then(r => { if (!r.ok) throw new Error("history.csv " + r.status); return r.text(); }),
-    fetch("data/status.json").then(r => { if (!r.ok) throw new Error("status.json " + r.status); return r.json(); }),
+    fetch("data/history.csv", { cache: "no-cache" }).then(r => { if (!r.ok) throw new Error("history.csv " + r.status); return r.text(); }),
+    fetch("data/status.json", { cache: "no-cache" }).then(r => { if (!r.ok) throw new Error("status.json " + r.status); return r.json(); }),
   ]);
   const rows = Calc.parseCSV(csv);
   return { rows, status, latest: Calc.latestDate(rows) };
