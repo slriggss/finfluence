@@ -165,3 +165,25 @@ main.dash { max-width: 1200px; }
 .lead-list li::before { content: counter(lead); width: 1.4em; color: var(--muted); font-weight: 650; }
 .lead-item { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .lead-note { margin: 2px 0 0; color: var(--muted); font-size: .74rem; }
+
+/* ===== Background orbs: three soft, slowly drifting glows in the theme colors, shifted further as the page scrolls ===== */
+:root { --scroll: 0; --orb-strength: 30%; }
+@media (prefers-color-scheme: dark) { :root { --orb-strength: 36%; } }
+.orbs { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
+.orb { position: absolute; border-radius: 50%; will-change: transform, translate;
+       background: radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--orb) var(--orb-strength), transparent) 0%, transparent 68%); }
+.orb.o1 { --orb: var(--accent); width: 58vmax; height: 58vmax; left: -20vmax; top: -18vmax;
+          translate: calc(var(--scroll) * 24vw) calc(var(--scroll) * 62vh); animation: drift1 38s ease-in-out infinite alternate; }
+.orb.o2 { --orb: var(--accent2); width: 52vmax; height: 52vmax; right: -22vmax; top: 4vh;
+          translate: calc(var(--scroll) * -20vw) calc(var(--scroll) * 48vh); animation: drift2 46s ease-in-out infinite alternate; }
+.orb.o3 { --orb: var(--t3); width: 62vmax; height: 62vmax; left: 24vw; bottom: -34vmax;
+          translate: calc(var(--scroll) * 16vw) calc(var(--scroll) * -34vh); animation: drift3 54s ease-in-out infinite alternate; }
+@keyframes drift1 { from { transform: translate(0, 0) scale(1); } to { transform: translate(9vw, 7vh) scale(1.14); } }
+@keyframes drift2 { from { transform: translate(0, 0) scale(1.08); } to { transform: translate(-8vw, 9vh) scale(.94); } }
+@keyframes drift3 { from { transform: translate(0, 0) scale(.96); } to { transform: translate(-10vw, -6vh) scale(1.12); } }
+@media (prefers-reduced-motion: reduce) { .orb { animation: none; translate: none; } }
+
+/* a touch of frosted glass, so the orbs show through the cards and the nav bar */
+nav { background: color-mix(in srgb, var(--card) 86%, transparent); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+.kpi, .panel, .runpill, .card, .chart-card { background: color-mix(in srgb, var(--card) 90%, transparent);
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }

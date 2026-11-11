@@ -1,6 +1,6 @@
 // Network first, so online visits always show the latest data; the cache is the offline fallback.
-const CACHE = "finfluence-v5";
-const SHELL = ["./", "index.html", "browse.html", "trends.html", "style.css?v=5", "app.js?v=5", "calc.js?v=5", "charts.js?v=5",
+const CACHE = "finfluence-v6";
+const SHELL = ["./", "index.html", "browse.html", "trends.html", "style.css?v=6", "app.js?v=6", "calc.js?v=6", "charts.js?v=6",
   "manifest.webmanifest", "icon.svg", "icon-192.png", "icon-512.png", "data/history.csv", "data/status.json"];
 
 self.addEventListener("install", e => {

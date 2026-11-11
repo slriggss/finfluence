@@ -17,7 +17,24 @@ const fmtDay = (d, long = false) => new Date(d + "T00:00:00Z").toLocaleDateStrin
 const pill = (v, text) => `<span class="pill ${v == null ? "flat" : v > 0 ? "up" : v < 0 ? "down" : "flat"}">` +
   `${v == null ? "" : v > 0 ? "▲ " : v < 0 ? "▼ " : ""}${text}</span>`;
 
+// Three soft orbs behind every page (styled in style.css). --scroll runs from 0 at the top of the page to 1 at the
+// bottom and moves them as the reader scrolls, on top of their slow drift.
+function renderBackdrop() {
+  document.body.insertAdjacentHTML("afterbegin", `<div class="orbs" aria-hidden="true"><i class="orb o1"></i><i class="orb o2"></i><i class="orb o3"></i></div>`);
+  const root = document.documentElement.style;
+  let queued = false;
+  const update = () => {
+    queued = false;
+    const max = document.documentElement.scrollHeight - window.innerHeight;
+    root.setProperty("--scroll", (max > 0 ? Math.min(1, Math.max(0, window.scrollY / max)) : 0).toFixed(4));
+  };
+  window.addEventListener("scroll", () => { if (!queued) { queued = true; requestAnimationFrame(update); } }, { passive: true });
+  window.addEventListener("resize", update);
+  update();
+}
+
 function renderNav(active) {
+  renderBackdrop();
   const links = [["index.html", "Today"], ["browse.html", "Browse"], ["trends.html", "Trends"]];
   document.body.insertAdjacentHTML("afterbegin",
     `<nav><span class="brand"><i class="mark"></i>Finfluence</span>` +
