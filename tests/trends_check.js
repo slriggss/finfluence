@@ -18,5 +18,7 @@ console.log(JSON.stringify({
   total_change_views: Calc.totalChange(rows, "views"),
   leaders_views: Calc.leaders(rows, "views", 17),
   leaders_subscribers: Calc.leaders(rows, "subscribers", 17),
+  leaders_likes_recent: Calc.leaders(rows, "likes_recent", 17),
+  leaders_comments_recent: Calc.leaders(rows, "comments_recent", 17),
   median_views_per_video: Calc.median(Calc.onDate(rows, latest).filter(r => r.views_per_video != null).map(r => r.views_per_video)),
 }));

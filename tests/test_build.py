@@ -179,3 +179,34 @@ def test_fetch_all_survives_one_failing_source_and_saves_xml(tmp_path, roster):
     assert [r["ok"] for r in results] == [False, True]
     with gzip.open(tmp_path / "2026-10-30" / "youtube_rss.xml.gz", "rt") as f:
         assert f.read() == RSS
+
+
+# --- the third source: likes and comments ---
+
+def write_videos(raw, date, payload_):
+    with gzip.GzipFile(raw / date / "youtube_videos.json.gz", "wb", mtime=0) as f:
+        f.write(json.dumps(payload_).encode())
+
+
+VIDEOS = {"fetched": "2026-10-30T12:00:00Z", "channels": [{"channel_id": "UCa", "title": "Alpha", "videos": [
+    {"id": "v1", "published": "2026-10-29T12:00:00Z", "views": "10", "likes": "7", "comments": "3"}]}]}
+
+
+def test_three_sources_merge_into_one_row_with_likes_and_comments(tmp_path, roster):
+    raw = tmp_path / "raw"
+    write_day(raw, "2026-10-30", payload(channel("UCa", "Alpha", 900, 100, 4)))
+    write_rss(raw, "2026-10-30", RSS)
+    write_videos(raw, "2026-10-30", VIDEOS)
+    rows = build.build_history(build.load_raw(raw), roster)
+    assert len(rows) == 1 and rows[0]["source"] == "youtube+youtube_rss+youtube_videos"
+    assert (rows[0]["likes_recent"], rows[0]["comments_recent"], rows[0]["views"]) == (7, 3, 100)
+
+
+def test_a_day_without_the_videos_source_leaves_likes_and_comments_empty_and_history_round_trips(tmp_path, roster):
+    raw = tmp_path / "raw"
+    write_day(raw, "2026-10-30", payload(channel("UCa", "Alpha", 900, 100, 4)))
+    rows = build.build_history(build.load_raw(raw), roster)
+    assert rows[0]["likes_recent"] is None and rows[0]["comments_recent"] is None
+    path = tmp_path / "history.csv"
+    build.write_history(rows, path)
+    assert build.read_history(path) == rows

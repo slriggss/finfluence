@@ -112,7 +112,73 @@ def normalize_youtube_rss(payload):
     return rows
 
 
+# --- youtube_videos: likes and comments on each channel's newest uploads (API key, two more endpoints) ---
+
+UPLOADS_API = "https://www.googleapis.com/youtube/v3/playlistItems"
+VIDEOS_API = "https://www.googleapis.com/youtube/v3/videos"
+RECENT_VIDEOS = 15  # the same window as the upload feed: each channel's 15 newest uploads
+
+
+def fetch_youtube_videos(roster, key=None, session=None):
+    """The 15 newest uploads of each tracked channel, with their views, likes and comments.
+
+    A channel's uploads are the playlist whose id is "UU" plus the channel id minus its "UC". One
+    playlistItems.list call per channel, then one videos.list call per 50 videos. A channel whose
+    playlist cannot be read is left out (the count shows it); if none can, the source fails. Only
+    what is tracked is kept per video: id, publish time and the three counters (not titles,
+    descriptions or thumbnails), plus the channel's title.
+    """
+    key = key or os.environ.get("YOUTUBE_API_KEY")
+    if not key:
+        raise RuntimeError("YOUTUBE_API_KEY is not set")
+    get = (session or requests).get
+    channels, errors = [], []
+    for r in roster:
+        cid = r["channel_id"]
+        try:
+            resp = get(UPLOADS_API, timeout=30, params={
+                "part": "snippet,contentDetails", "playlistId": "UU" + cid[2:], "maxResults": RECENT_VIDEOS, "key": key})
+            resp.raise_for_status()
+            items = resp.json().get("items", [])
+        except Exception as e:
+            errors.append(f"{cid}: {type(e).__name__}")
+            continue
+        if not items:
+            continue
+        channels.append({"channel_id": cid, "title": items[0]["snippet"].get("channelTitle", ""),
+                         "videos": [{"id": it["contentDetails"]["videoId"],
+                                     "published": it["contentDetails"].get("videoPublishedAt", "")} for it in items]})
+    if not channels:
+        raise RuntimeError(f"no uploads could be read ({'; '.join(errors[:3]) or 'none found'})")
+    ids = [v["id"] for c in channels for v in c["videos"]]
+    stats = {}
+    for i in range(0, len(ids), BATCH):
+        resp = get(VIDEOS_API, timeout=30, params={"part": "statistics", "id": ",".join(ids[i:i + BATCH]), "key": key})
+        resp.raise_for_status()
+        for it in resp.json().get("items", []):
+            stats[it["id"]] = it.get("statistics", {})
+    for c in channels:
+        for v in c["videos"]:
+            s = stats.get(v["id"], {})
+            v.update(views=s.get("viewCount"), likes=s.get("likeCount"), comments=s.get("commentCount"))
+    return {"fetched": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"), "channels": channels}
+
+
+def _total(videos, name):
+    """The sum of one counter over the videos that report it; empty if none does (hidden or switched off)."""
+    vals = [int(v[name]) for v in videos if v.get(name) not in (None, "")]
+    return sum(vals) if vals else None
+
+
+def normalize_youtube_videos(payload):
+    """Per channel: the likes and the comments added up over its newest uploads."""
+    return [{"item_id": c["channel_id"], "item": c["title"],
+             "likes_recent": _total(c["videos"], "likes"), "comments_recent": _total(c["videos"], "comments")}
+            for c in payload.get("channels", [])]
+
+
 SOURCES = {
     "youtube": {"fetch": fetch_youtube, "normalize": normalize_youtube, "ext": "json"},
     "youtube_rss": {"fetch": fetch_youtube_rss, "normalize": normalize_youtube_rss, "ext": "xml"},
+    "youtube_videos": {"fetch": fetch_youtube_videos, "normalize": normalize_youtube_videos, "ext": "json"},
 }

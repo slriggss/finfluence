@@ -8,7 +8,7 @@
 <meta name="theme-color" content="#8a2f5b">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icon-192.png">
-<link rel="stylesheet" href="style.css?v=4">
+<link rel="stylesheet" href="style.css?v=5">
 </head>
 <body>
 <main class="dash">
@@ -60,9 +60,9 @@
     <div class="table-wrap" id="latest"></div>
   </section>
 </main>
-<script src="calc.js?v=4"></script>
-<script src="app.js?v=4"></script>
-<script src="charts.js?v=4"></script>
+<script src="calc.js?v=5"></script>
+<script src="app.js?v=5"></script>
+<script src="charts.js?v=5"></script>
 <script>
 renderNav("index.html");
 const TIERS = ["under 10K", "10K-100K", "100K-1M", "1M+"], TIER_VAR = ["--t1", "--t2", "--t3", "--t4"];
@@ -82,14 +82,21 @@ function totalTile(rows, col, label) {
 
 // The leaderboard card: the channels that grew the most, in percent, since the previous run. A switch picks views or subscribers.
 let LB = "views";
-const LB_LABEL = { views: "Views", subscribers: "Subscribers" };
+const LB_LABEL = { views: "Views", subscribers: "Subscribers", likes_recent: "Likes", comments_recent: "Comments" };
+const LB_NOTE = {
+  subscribers: "YouTube rounds subscriber counts, so small channels can jump",
+  likes_recent: "Likes on each channel's 15 newest uploads, so a new upload entering that window moves the total too",
+  comments_recent: "Comments on each channel's 15 newest uploads, so a new upload entering that window moves the total too",
+};
 function leaderboard(rows) {
-  const { prev, leaders } = Calc.leaders(rows, LB, 3);
+  const { prev, leaders, comparable } = Calc.leaders(rows, LB, 3);
   const switcher = `<span class="switch">` + Object.entries(LB_LABEL).map(([k, l]) => `<button data-lb="${k}" class="${k === LB ? "on" : ""}">${l}</button>`).join("") + `</span>`;
   const unit = LB_LABEL[LB].toLowerCase();
   let body;
   if (!prev) {
     body = `<p class="k-sub">The leaderboard appears once there is a second day of data.</p>`;
+  } else if (!comparable) {
+    body = `<div class="lead-name">Not enough ${unit} data yet</div><p class="k-sub">${LB_LABEL[LB]} are new to the tracker. This board needs a channel to have them on two different days.</p>`;
   } else if (!leaders.length || leaders[0].pct <= 0) {
     body = `<div class="lead-name">No growth yet today</div><p class="k-sub">No channel has gained ${unit} since ${prev}.</p>`;
   } else {
@@ -97,7 +104,7 @@ function leaderboard(rows) {
     body = `<div class="lead-top"><span class="lead-rank">1</span><div class="lead-main"><div class="lead-name" title="${esc(w.item)}">${esc(w.item)}</div>
       <div class="k-sub">${pill(w.pct, fmtPct(w.pct))} ${pill(w.change, delta(w.change))} <span>${fmt(w.old)} → ${fmt(w.now)} ${unit}</span></div></div></div>
       <ol class="lead-list" start="2">` + rest.map(r => `<li><span class="lead-item" title="${esc(r.item)}">${esc(r.item)}</span>${pill(r.pct, fmtPct(r.pct))}</li>`).join("") + `</ol>
-      <p class="lead-note">Growth in ${unit} since ${prev}${LB === "subscribers" ? ". YouTube rounds subscriber counts, so small channels can jump" : ""}.</p>`;
+      <p class="lead-note">Growth in ${unit} since ${prev}${LB_NOTE[LB] ? ". " + LB_NOTE[LB] : ""}.</p>`;
   }
   return `<div class="k-label lead-label"><span>Leaderboard</span>${switcher}</div>${body}`;
 }

@@ -12,7 +12,8 @@ from .sources import SOURCES
 ROOT = Path(__file__).resolve().parent.parent
 DATA = ROOT / "data"
 COLUMNS = ["date", "item_id", "item", "source", "subscribers", "views", "videos", "views_per_video",
-           "videos_7d", "days_since_upload", "recent_avg_views", "tier", "kind", "instagram", "youtube_handle"]
+           "videos_7d", "days_since_upload", "recent_avg_views", "likes_recent", "comments_recent", "tier", "kind",
+           "instagram", "youtube_handle"]
 TIERS = [(1_000_000, "1M+"), (100_000, "100K-1M"), (10_000, "10K-100K"), (0, "under 10K")]
 
 
@@ -67,6 +68,7 @@ def convert_day(date, payloads, roster):
                "views_per_video": round(views / videos, 1) if views is not None and videos else None,
                "videos_7d": m.get("videos_7d"), "days_since_upload": m.get("days_since_upload"),
                "recent_avg_views": m.get("recent_avg_views"),
+               "likes_recent": m.get("likes_recent"), "comments_recent": m.get("comments_recent"),
                "tier": tier(subs), "kind": meta.get("kind", ""),
                "instagram": meta.get("instagram", ""), "youtube_handle": meta.get("youtube_handle", "")}
         rows.append(row)
@@ -89,12 +91,12 @@ def write_history(rows, path):
 def read_history(path):
     """History rows with the numeric columns as numbers (empty -> None)."""
     num = {"subscribers": int, "views": int, "videos": int, "views_per_video": float,
-           "videos_7d": int, "days_since_upload": int, "recent_avg_views": float}
+           "videos_7d": int, "days_since_upload": int, "recent_avg_views": float, "likes_recent": int, "comments_recent": int}
     with open(path, newline="", encoding="utf-8") as f:
         rows = list(csv.DictReader(f))
     for r in rows:
         for c, cast in num.items():
-            r[c] = cast(r[c]) if r[c] != "" else None
+            r[c] = cast(r[c]) if r.get(c, "") != "" else None
     return rows
 
 

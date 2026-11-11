@@ -86,7 +86,7 @@ def check(path):
         assert tc["pct"] == (pytest.approx((cur - was) / was * 100) if was else None)
 
     # leaderboard: items ranked by percent growth since the previous date, best first
-    for col in ("views", "subscribers"):
+    for col in ("views", "subscribers", "likes_recent", "comments_recent"):
         lb, days = got[f"leaders_{col}"], sorted({r["date"] for r in rows})
         if len(days) < 2:
             assert lb["prev"] is None and lb["leaders"] == []
@@ -98,7 +98,7 @@ def check(path):
             if o and o[col]:
                 expect.append((i, (n[col] - o[col]) / o[col] * 100, n[col] - o[col]))
         expect.sort(key=lambda e: (-e[1], -e[2], e[0]))
-        assert lb["prev"] == days[-2]
+        assert lb["prev"] == days[-2] and lb["comparable"] == len(expect)
         assert [(g["item_id"], pytest.approx(g["pct"])) for g in lb["leaders"]] == [(e[0], pytest.approx(e[1])) for e in expect]
         assert all(g["change"] == g["now"] - g["old"] for g in lb["leaders"])
 

@@ -1,7 +1,7 @@
 // Pure functions on the history rows. Shared by the pages and by tests/trends_check.js (Node),
 // so the numbers on the Trends page can be checked against data/history.csv.
 (function (root) {
-  const NUM = ["subscribers", "views", "videos", "views_per_video", "videos_7d", "days_since_upload", "recent_avg_views"];
+  const NUM = ["subscribers", "views", "videos", "views_per_video", "videos_7d", "days_since_upload", "recent_avg_views", "likes_recent", "comments_recent"];
 
   function parseCSV(text) {
     const rows = []; let row = [], cell = "", q = false;
@@ -21,7 +21,7 @@
     const head = rows.shift();
     return rows.filter(r => r.length === head.length).map(r => {
       const o = Object.fromEntries(head.map((h, i) => [h, r[i]]));
-      for (const c of NUM) o[c] = o[c] === "" ? null : Number(o[c]);
+      for (const c of NUM) o[c] = o[c] == null || o[c] === "" ? null : Number(o[c]);  // a column the file does not have yet is empty too
       return o;
     });
   }
@@ -67,7 +67,7 @@
   // Only items with a value on both dates count. Ties go to the bigger absolute gain, then to item_id.
   function leaders(rows, col, topN = 3) {
     const latest = latestDate(rows), earlier = dates(rows).filter(d => d < latest);
-    if (!earlier.length) return { prev: null, leaders: [] };
+    if (!earlier.length) return { prev: null, leaders: [], comparable: 0 };
     const prev = earlier[earlier.length - 1];
     const before = new Map(onDate(rows, prev).filter(r => r[col] != null).map(r => [r.item_id, r[col]]));
     const out = [];
@@ -78,7 +78,7 @@
       out.push({ item_id: n.item_id, item: n.item, old, now: n[col], change: n[col] - old, pct: p });
     }
     out.sort((a, b) => b.pct - a.pct || b.change - a.change || (a.item_id < b.item_id ? -1 : 1));
-    return { prev, leaders: out.slice(0, topN) };
+    return { prev, leaders: out.slice(0, topN), comparable: out.length };  // comparable: items with a value on both dates
   }
 
   // Change from each item's first to its latest value of `col` (items with fewer than two values skipped).
