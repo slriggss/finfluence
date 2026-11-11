@@ -14,8 +14,9 @@
 <main class="dash">
   <header class="dash-head">
     <div>
-      <h1>Today</h1>
-      <p class="muted" id="sub">Loading…</p>
+      <h1 id="title">Today</h1>
+      <p class="dash-sub" id="sub">Loading…</p>
+      <p class="dash-counts" id="counts"></p>
     </div>
     <div class="runpill" id="runpill"></div>
   </header>
@@ -79,6 +80,28 @@ function totalTile(rows, col, label) {
   return tile(label, big, sub, sparkline(series.map(s => s.total), 180, 40));
 }
 
+// The leaderboard card: the channels that grew the most, in percent, since the previous run. A switch picks views or subscribers.
+let LB = "views";
+const LB_LABEL = { views: "Views", subscribers: "Subscribers" };
+function leaderboard(rows) {
+  const { prev, leaders } = Calc.leaders(rows, LB, 3);
+  const switcher = `<span class="switch">` + Object.entries(LB_LABEL).map(([k, l]) => `<button data-lb="${k}" class="${k === LB ? "on" : ""}">${l}</button>`).join("") + `</span>`;
+  const unit = LB_LABEL[LB].toLowerCase();
+  let body;
+  if (!prev) {
+    body = `<p class="k-sub">The leaderboard appears once there is a second day of data.</p>`;
+  } else if (!leaders.length || leaders[0].pct <= 0) {
+    body = `<div class="lead-name">No growth yet today</div><p class="k-sub">No channel has gained ${unit} since ${prev}.</p>`;
+  } else {
+    const [w, ...rest] = leaders;
+    body = `<div class="lead-top"><span class="lead-rank">1</span><div class="lead-main"><div class="lead-name" title="${esc(w.item)}">${esc(w.item)}</div>
+      <div class="k-sub">${pill(w.pct, fmtPct(w.pct))} ${pill(w.change, delta(w.change))} <span>${fmt(w.old)} → ${fmt(w.now)} ${unit}</span></div></div></div>
+      <ol class="lead-list" start="2">` + rest.map(r => `<li><span class="lead-item" title="${esc(r.item)}">${esc(r.item)}</span>${pill(r.pct, fmtPct(r.pct))}</li>`).join("") + `</ol>
+      <p class="lead-note">Growth in ${unit} since ${prev}${LB === "subscribers" ? ". YouTube rounds subscriber counts, so small channels can jump" : ""}.</p>`;
+  }
+  return `<div class="k-label lead-label"><span>Leaderboard</span>${switcher}</div>${body}`;
+}
+
 function movesChart(moves) {
   const max = Math.max(...moves.map(m => Math.abs(m.pct)), 1), mixed = moves.some(m => m.pct < 0);
   return `<ul class="bars">` + moves.map(m => {
@@ -109,19 +132,19 @@ loadData().then(({ rows, status, latest }) => {
   const dates = Calc.dates(rows), prev = dates.length > 1 ? dates[dates.length - 2] : null;
   const failed = status.sources.filter(s => !s.ok).length;
 
-  $("#sub").textContent = `Data for ${latest}` + (prev ? ` · each change is against the previous run, ${prev}` : " · the first day of data, so no changes yet");
+  $("#title").textContent = `Today, ${fmtDay(latest, true)}`;
+  $("#sub").innerHTML = `<b>${status.days_with_success.toLocaleString()} ${status.days_with_success === 1 ? "day" : "days"} of data</b> since ${esc(fmtDay(status.first_run_date))}` +
+    (prev ? ` · every change is against the previous run, ${esc(fmtDay(prev))}` : " · the first day, so no changes yet");
+  // the item counts from status.json
+  $("#counts").textContent = `${status.items.toLocaleString()} channels in the latest run · ${status.new_today.toLocaleString()} appeared · ${status.gone_today.toLocaleString()} disappeared since the previous run`;
   $("#runpill").innerHTML = `<span class="dot ${failed ? "bad" : "ok"}"></span><span><b>${failed ? `${failed} of ${status.sources.length} sources failed` : "All sources ok"}</b>` +
     ` · last run ${esc(fmtUTC(status.run_time))}</span>`;
 
-  // the counts from status.json, plus the totals the history gives
-  $("#kpis").innerHTML = [
-    totalTile(rows, "subscribers", "Subscribers, all channels"),
-    totalTile(rows, "views", "Views, all channels"),
-    tile("Channels", status.items.toLocaleString(), "in the latest run"),
-    tile("Days of data", status.days_with_success.toLocaleString(), `successful runs since ${esc(status.first_run_date)}`),
-    tile("Roster changes", `<span>${status.new_today.toLocaleString()}<small>appeared</small></span><span>${status.gone_today.toLocaleString()}<small>disappeared</small></span>`,
-      "since the previous run", "", "split"),
-  ].join("");
+  $("#kpis").innerHTML = totalTile(rows, "subscribers", "Subscribers, all channels") + totalTile(rows, "views", "Views, all channels") +
+    `<div class="kpi leader" id="lb"></div>`;
+  const drawLB = () => { $("#lb").innerHTML = leaderboard(rows); };
+  drawLB();
+  $("#lb").addEventListener("click", e => { const b = e.target.closest("[data-lb]"); if (b) { LB = b.dataset.lb; drawLB(); } });
 
   const { moves } = Calc.moves(rows, latest);
   if (!prev) {

@@ -63,6 +63,24 @@
     return { prev, moves: out.slice(0, topN) };
   }
 
+  // The leaderboard: items ranked by percent growth of `col` from the latest earlier date to the latest date, best first.
+  // Only items with a value on both dates count. Ties go to the bigger absolute gain, then to item_id.
+  function leaders(rows, col, topN = 3) {
+    const latest = latestDate(rows), earlier = dates(rows).filter(d => d < latest);
+    if (!earlier.length) return { prev: null, leaders: [] };
+    const prev = earlier[earlier.length - 1];
+    const before = new Map(onDate(rows, prev).filter(r => r[col] != null).map(r => [r.item_id, r[col]]));
+    const out = [];
+    for (const n of onDate(rows, latest)) {
+      if (n[col] == null || !before.has(n.item_id)) continue;
+      const old = before.get(n.item_id), p = pct(old, n[col]);
+      if (p == null) continue;
+      out.push({ item_id: n.item_id, item: n.item, old, now: n[col], change: n[col] - old, pct: p });
+    }
+    out.sort((a, b) => b.pct - a.pct || b.change - a.change || (a.item_id < b.item_id ? -1 : 1));
+    return { prev, leaders: out.slice(0, topN) };
+  }
+
   // Change from each item's first to its latest value of `col` (items with fewer than two values skipped).
   function sinceFirst(rows, col) {
     const out = [];
@@ -131,7 +149,7 @@
   }
 
   const api = { NUM, parseCSV, dates, latestDate, onDate, seriesByItem, pct, moves, sinceFirst, biggestGains, median, spread,
-                totalsByDate, totalChange };
+                totalsByDate, totalChange, leaders };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   else root.Calc = api;
 })(typeof window !== "undefined" ? window : globalThis);

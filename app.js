@@ -9,6 +9,10 @@ const delta = v => (v == null ? "" : v === 0 ? "±0" : `${v > 0 ? "+" : "−"}${
 const fmtUTC = iso => new Date(iso).toLocaleString("en-US", { timeZone: "UTC", month: "short", day: "numeric",
   hour: "2-digit", minute: "2-digit", hour12: false }) + " UTC";
 
+// "2026-11-11" as "Nov 11", or "November 11, 2026" when long.
+const fmtDay = (d, long = false) => new Date(d + "T00:00:00Z").toLocaleDateString("en-US", long
+  ? { timeZone: "UTC", month: "long", day: "numeric", year: "numeric" } : { timeZone: "UTC", month: "short", day: "numeric" });
+
 // A small up/down badge for a change; `text` is what it says.
 const pill = (v, text) => `<span class="pill ${v == null ? "flat" : v > 0 ? "up" : v < 0 ? "down" : "flat"}">` +
   `${v == null ? "" : v > 0 ? "▲ " : v < 0 ? "▼ " : ""}${text}</span>`;

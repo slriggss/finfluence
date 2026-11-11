@@ -85,6 +85,23 @@ def check(path):
         assert (tc["was"], tc["now"], tc["change"]) == (was, cur, cur - was)
         assert tc["pct"] == (pytest.approx((cur - was) / was * 100) if was else None)
 
+    # leaderboard: items ranked by percent growth since the previous date, best first
+    for col in ("views", "subscribers"):
+        lb, days = got[f"leaders_{col}"], sorted({r["date"] for r in rows})
+        if len(days) < 2:
+            assert lb["prev"] is None and lb["leaders"] == []
+            continue
+        by = {d: {r["item_id"]: r for r in rows if r["date"] == d and r[col] is not None} for d in (days[-2], latest)}
+        expect = []
+        for i, n in by[latest].items():
+            o = by[days[-2]].get(i)
+            if o and o[col]:
+                expect.append((i, (n[col] - o[col]) / o[col] * 100, n[col] - o[col]))
+        expect.sort(key=lambda e: (-e[1], -e[2], e[0]))
+        assert lb["prev"] == days[-2]
+        assert [(g["item_id"], pytest.approx(g["pct"])) for g in lb["leaders"]] == [(e[0], pytest.approx(e[1])) for e in expect]
+        assert all(g["change"] == g["now"] - g["old"] for g in lb["leaders"])
+
     vpv = [r["views_per_video"] for r in rows if r["date"] == latest and r["views_per_video"] is not None]
     assert got["median_views_per_video"] == pytest.approx(statistics.median(vpv))
 
