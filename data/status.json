@@ -1,7 +1,7 @@
 {
- "run_time": "2026-11-13T15:32:20Z",
+ "run_time": "2026-11-14T00:29:28Z",
  "first_run_date": "2026-11-03",
- "days_with_success": 11,
+ "days_with_success": 12,
  "items": 17,
  "new_today": 0,
  "gone_today": 0,
@@ -13,8 +13,8 @@
   },
   {
    "name": "youtube_rss",
-   "ok": true,
-   "count": 17
+   "ok": false,
+   "count": 0
   },
   {
    "name": "youtube_videos",
